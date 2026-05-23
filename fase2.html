@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bears Love Story - Fase 2</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: "Comic Sans MS", system-ui, sans-serif;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        canvas { display: block; }
+        .console-body { background-color: #3d2b2b; }
+        
+        button { touch-action: manipulation; }
+
+        .btn-red { background-color: #ff5e5e; border: 2px solid #ffffff; color: white; }
+        .btn-red:active { background-color: #e04a4a; }
+
+        /* OVERLAY DE TRANSIÇÃO (FADE OUT) */
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 9999;
+        }
+        #transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* MODAL DE SUPERMERCADO */
+        #supermarket-modal {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #supermarket-modal.active { display: flex; }
+        
+        .super-inner, .bus-inner {
+            background: #f0f4f8;
+            border: 4px solid #ff5e5e;
+            border-radius: 12px;
+            padding: 20px;
+            width: 85%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-family: "Comic Sans MS", sans-serif;
+        }
+        
+        .super-inner::-webkit-scrollbar, .bus-inner::-webkit-scrollbar { width: 6px; }
+        .super-inner::-webkit-scrollbar-thumb, .bus-inner::-webkit-scrollbar-thumb { background: #ff5e5e; border-radius: 4px; }
+
+        .super-inner h2 {
+            text-align: center;
+            color: #3d2b2b;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+        .shop-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .shop-item:hover { border-color: #ff5e5e; }
+        .shop-item.bought { background: #d4edda; border-color: #28a745; cursor: default; }
+        .shop-item .emoji { font-size: 2rem; margin-right: 12px; }
+        .shop-item .info { flex: 1; }
+        .shop-item .info .name { font-weight: bold; font-size: 0.95rem; color: #3d2b2b; }
+        .shop-item .info .desc { font-size: 0.75rem; color: #777; }
+        .shop-item .buy-btn {
+            background: #ff5e5e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-family: "Comic Sans MS", sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .shop-item .buy-btn:disabled { background: #aaa; cursor: default; }
+        .close-btn {
+            margin-top: 14px;
+            background: #3d2b2b;
+            color: white;
+            border: 2px solid #ff5e5e;
+            border-radius: 8px;
+            padding: 8px 24px;
+            font-family: "Comic Sans MS", sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* MODAL PARADA DE ÔNIBUS */
+        #bus-modal {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #bus-modal.active { display: flex; }
+        .bus-inner {
+            text-align: center;
+            max-width: 480px;
+        }
+        .bus-inner h2 { color: #3d2b2b; font-size: 1.1rem; margin-bottom: 6px; }
+        .bus-inner p { color: #555; font-size: 0.8rem; margin-bottom: 14px; }
+        .bus-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .bus-opt {
+            background: #3d2b2b;
+            color: white;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            padding: 14px 10px;
+            font-size: 1.1rem;
+            font-family: "Comic Sans MS", sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .bus-opt:hover { border-color: #ff5e5e; background: #5a3f3f; }
+        .bus-opt.correct { background: #28a745; border-color: #1e7e34; }
+        .bus-opt.wrong { background: #dc3545; border-color: #bd2130; }
+
+        /* GAME OVER */
+        #gameover-screen {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 80;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-family: "Comic Sans MS", sans-serif;
+            text-align: center;
+        }
+        #gameover-screen.active { display: flex; }
+        #gameover-screen h2 { font-size: 2.5rem; color: #ff5e5e; margin-bottom: 10px; }
+        #gameover-screen p { font-size: 1rem; opacity: 0.8; margin-bottom: 20px; }
+        #gameover-screen button {
+            background: #ff5e5e;
+            color: white;
+            border: 2px solid white;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-family: "Comic Sans MS", sans-serif;
+            cursor: pointer;
+        }
+
+        @media (max-height: 450px) {
+            .super-inner, .bus-inner { padding: 10px; }
+            .super-inner h2, .bus-inner h2 { margin-bottom: 6px; font-size: 1rem; }
+            .shop-item { padding: 6px 10px; margin-bottom: 6px; }
+            .shop-item .emoji { font-size: 1.5rem; }
+            .bus-opt { padding: 8px; font-size: 0.9rem; }
+            .close-btn { margin-top: 6px; padding: 6px; }
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center h-screen">
+
+    <div id="transition-overlay"></div>
+
+    <div class="console-body relative w-[95vw] h-[90vh] rounded-[3rem] shadow-2xl flex flex-col p-6 border-b-8 border-black/40">
+        <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest">
+            My Little Love Story
+        </div>
+
+        <div class="flex flex-1 items-center justify-between gap-4 mt-4">
+
+            <div class="relative w-32 h-32 flex items-center justify-center">
+                <button class="absolute top-0 btn-red w-12 h-12 rounded-md opacity-30 cursor-not-allowed" disabled>▲</button>
+                <button id="left" class="absolute left-0 btn-red w-12 h-12 rounded-md shadow-md text-xl">◀</button>
+                <button id="right" class="absolute right-0 btn-red w-12 h-12 rounded-md shadow-md text-xl">▶</button>
+                <button class="absolute bottom-0 btn-red w-12 h-12 rounded-md opacity-30 cursor-not-allowed" disabled>▼</button>
+                <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
+            </div>
+
+            <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-sm overflow-hidden shadow-inner">
+                <canvas id="game"></canvas>
+
+                <div id="dialog" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] bg-black/80 text-white p-2 rounded text-xs z-20 text-center"></div>
+
+                <div id="supermarket-modal">
+                    <div class="super-inner">
+                        <h2>🛒 Mercadinho do Zé</h2>
+                        <div id="shop-ice-cream" class="shop-item" onclick="buyItem('sorvete')">
+                            <span class="emoji">🍦</span>
+                            <div class="info">
+                                <div class="name">Sorvete de Creme</div>
+                                <div class="desc">Fresquinho e delicioso!</div>
+                            </div>
+                            <button class="buy-btn" id="btn-sorvete">Comprar</button>
+                        </div>
+                        <div id="shop-fox" class="shop-item" onclick="buyItem('pelucia')">
+                            <span class="emoji">🦊</span>
+                            <div class="info">
+                                <div class="name">Pelúcia de Raposa</div>
+                                <div class="desc">Fofa e colecionável!</div>
+                            </div>
+                            <button class="buy-btn" id="btn-pelucia">Comprar</button>
+                        </div>
+                        <button class="close-btn" onclick="closeMarket()">Fechar ← Sair do Mercado</button>
+                    </div>
+                </div>
+
+                <div id="bus-modal">
+                    <div class="bus-inner">
+                        <h2>🚌 Parada de Ônibus</h2>
+                        <p>Qual ônibus vai para <strong>Abreulândia</strong>?<br>Escolha com cuidado — uma chance só!</p>
+                        <div class="bus-grid">
+                            <button class="bus-opt" onclick="chooseBus('502')">502 – Jurema</button>
+                            <button class="bus-opt" onclick="chooseBus('314')">314 – Abreulândia</button>
+                            <button class="bus-opt" onclick="chooseBus('88')">88 – Centro</button>
+                            <button class="bus-opt" onclick="chooseBus('710')">710 – São Gerardo</button>
+                        </div>
+                        <p style="font-size:0.7rem;color:#aaa;">Dica: Leia bem as placas do cenário!</p>
+                    </div>
+                </div>
+
+                <div id="gameover-screen">
+                    <h2>💔 Game Over</h2>
+                    <p>Você pegou o ônibus errado e<br>se perdeu pela cidade...</p>
+                    <button onclick="window.location.href='index.html'">🔄 Tentar de novo (Fase 1)</button>
+                </div>
+            </div>
+
+            <div class="w-32 flex justify-center">
+                <button id="action" class="btn-red w-24 h-24 rounded-full shadow-xl flex items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-white/30 rounded-full"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-end justify-between mt-4 px-8">
+            <div class="text-white text-[10px] leading-tight">
+                <span class="font-bold">Fase 2 – Missões:</span><br>
+                🌸 Lírio do Vale (floricultura, direita) &nbsp;|&nbsp;
+                🍦🦊 Sorvete + Pelúcia (mercado, centro) &nbsp;|&nbsp;
+                🚌 Ônibus correto para Abreulândia (esquerda)
+            </div>
+            <div class="flex gap-4">
+                <button id="pauseBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Pause <span class="text-xs">II</span></button>
+                <button id="playBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Play <span class="text-xs">▶</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const dialog = document.getElementById("dialog");
+    const transitionOverlay = document.getElementById("transition-overlay");
+
+    let isPaused = false;
+    let modalOpen = false;
+    let gameOver = false;
+    let victory = false;
+
+    const inventory = {
+        lirio: false,
+        sorvete: false,
+        pelucia: false,
+    };
+
+    let missionLirio = false;
+    let missionMarket = false; 
+    let missionBus = false;
+
+    const player = { x: 200, y: 0, w: 40, h: 40, speed: 6, baseY: 0 };
+    const map = { width: 5000, floorY: 0 };
+    const controls = { left: false, right: false };
+
+    const FLORICULTURA_X = 4200;
+    const MERCADO_X = 2300;
+    const PARADA_X = 300;
+
+    let camX = 0;
+
+    const npcs = [
+        { x: 900, color: "#f9ca24", text: "Urso Amarelo: Que lindo dia para passear pela cidade!", activity: "idle" },
+        { x: 1600, color: "#6c5ce7", text: "Urso Roxo: Ouvi que a floricultura tem lírios lindos!", activity: "jump" },
+        { x: 3100, color: "#00b894", text: "Urso Verde: O mercadinho fica ali no centro! Têm sorvetes deliciosos.", activity: "idle" },
+        { x: 3700, color: "#e17055", text: "Urso Laranja: Lembre-se: o ônibus 314 vai para Abreulândia!", activity: "idle" },
+    ];
+
+    const cars = [
+        { x: 700, color: "#e74c3c", w: 90, h: 40 },
+        { x: 1900, color: "#3498db", w: 90, h: 40 },
+        { x: 3500, color: "#2ecc71", w: 90, h: 40 },
+        { x: 4600, color: "#f39c12", w: 90, h: 40 },
+    ];
+
+    function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        map.floorY = canvas.height - 30;
+        player.y = map.floorY - player.h;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    function bind(id, key) {
+        const el = document.getElementById(id);
+        const start = (e) => { 
+            if(e.cancelable) e.preventDefault(); 
+            controls[key] = true; 
+        };
+        const end = (e) => { 
+            if(e.cancelable) e.preventDefault(); 
+            controls[key] = false; 
+        };
+        
+        el.addEventListener("touchstart", start, { passive: false });
+        el.addEventListener("touchend", end, { passive: false });
+        el.addEventListener("mousedown", start);
+        el.addEventListener("mouseup", end);
+        el.addEventListener("mouseleave", end);
+    }
+    
+    bind("left", "left");
+    bind("right", "right");
+
+    document.getElementById("pauseBtn").addEventListener("click", () => isPaused = true);
+    document.getElementById("playBtn").addEventListener("click", () => { isPaused = false; });
+
+    const actionBtn = document.getElementById("action");
+    const handleAction = (e) => {
+        if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
+        if (isPaused || modalOpen || gameOver || victory) return;
+
+        if (Math.abs(player.x - FLORICULTURA_X) < 100) {
+            if (!inventory.lirio) {
+                inventory.lirio = true;
+                missionLirio = true;
+                showDialog("🌸 Você comprou um Lírio do Vale lindo! Que presentão!");
+            } else {
+                showDialog("Você já tem o lírio! Agora vá ao mercado no centro.");
+            }
+            return;
+        }
+
+        if (Math.abs(player.x - MERCADO_X) < 120) {
+            if (!missionMarket) {
+                openMarket();
+            } else {
+                showDialog("Compras feitas! Agora vá à parada de ônibus (esquerda).");
+            }
+            return;
+        }
+
+        if (Math.abs(player.x - PARADA_X) < 120) {
+            if (!missionLirio || !missionMarket) {
+                let missing = [];
+                if (!missionLirio) missing.push("o lírio do vale 🌸");
+                if (!missionMarket) missing.push("o sorvete e a pelúcia 🍦🦊");
+                showDialog("Ainda preciso comprar: " + missing.join(", ") + ". Não posso ir assim!");
+            } else {
+                openBusModal();
+            }
+            return;
+        }
+
+        let spokeToNpc = false;
+        npcs.forEach(n => {
+            if (Math.abs(player.x - n.x) < 60) {
+                spokeToNpc = true;
+                showDialog(n.text);
+            }
+        });
+
+        if (!spokeToNpc) {
+            showDialog("Nada para interagir aqui...");
+        }
+    };
+    
+    actionBtn.addEventListener("touchstart", handleAction, { passive: false });
+    actionBtn.addEventListener("mousedown", handleAction);
+
+    function showDialog(text) {
+        dialog.textContent = text;
+        dialog.classList.remove("hidden");
+        setTimeout(() => dialog.classList.add("hidden"), 4000);
+    }
+
+    function openMarket() {
+        modalOpen = true;
+        document.getElementById("supermarket-modal").classList.add("active");
+        if (inventory.sorvete) {
+            document.getElementById("shop-ice-cream").classList.add("bought");
+            document.getElementById("btn-sorvete").disabled = true;
+            document.getElementById("btn-sorvete").textContent = "✓ Comprado";
+        }
+        if (inventory.pelucia) {
+            document.getElementById("shop-fox").classList.add("bought");
+            document.getElementById("btn-pelucia").disabled = true;
+            document.getElementById("btn-pelucia").textContent = "✓ Comprado";
+        }
+    }
+
+    function closeMarket() {
+        modalOpen = false;
+        document.getElementById("supermarket-modal").classList.remove("active");
+        if (inventory.sorvete && inventory.pelucia) {
+            missionMarket = true;
+            showDialog("Compras no mercado concluídas! 🍦🦊 Agora vá à parada de ônibus à esquerda!");
+        } else {
+            showDialog("Volte ao mercado quando quiser comprar os itens!");
+        }
+    }
+
+    function buyItem(item) {
+        if (item === "sorvete" && !inventory.sorvete) {
+            inventory.sorvete = true;
+            document.getElementById("shop-ice-cream").classList.add("bought");
+            const btn = document.getElementById("btn-sorvete");
+            btn.disabled = true;
+            btn.textContent = "✓ Comprado";
+        }
+        if (item === "pelucia" && !inventory.pelucia) {
+            inventory.pelucia = true;
+            document.getElementById("shop-fox").classList.add("bought");
+            const btn = document.getElementById("btn-pelucia");
+            btn.disabled = true;
+            btn.textContent = "✓ Comprado";
+        }
+    }
+
+    function openBusModal() {
+        modalOpen = true;
+        document.getElementById("bus-modal").classList.add("active");
+    }
+
+    function chooseBus(number) {
+        const buttons = document.querySelectorAll(".bus-opt");
+        buttons.forEach(b => b.disabled = true);
+
+        if (number === "314") {
+            buttons.forEach(b => {
+                if (b.textContent.includes("314")) b.classList.add("correct");
+            });
+            setTimeout(() => {
+                document.getElementById("bus-modal").classList.remove("active");
+                modalOpen = false;
+                missionBus = true;
+                victory = true;
+                
+                // Transição suave para a Fase 3
+                transitionOverlay.classList.add("active");
+                
+                setTimeout(() => {
+                    window.location.href = "fase3.html";
+                }, 1500); // Aguarda o CSS fade out terminar
+                
+            }, 1200);
+        } else {
+            buttons.forEach(b => {
+                if (b.textContent.includes(number)) b.classList.add("wrong");
+                if (b.textContent.includes("314")) b.classList.add("correct");
+            });
+            setTimeout(() => {
+                document.getElementById("bus-modal").classList.remove("active");
+                modalOpen = false;
+                gameOver = true;
+                document.getElementById("gameover-screen").classList.add("active");
+            }, 1800);
+        }
+    }
+
+    function update() {
+        if (isPaused || modalOpen || gameOver || victory) return;
+        if (controls.left) player.x -= player.speed;
+        if (controls.right) player.x += player.speed;
+        player.x = Math.max(50, Math.min(player.x, map.width - player.w - 50));
+        player.y = map.floorY - player.h;
+
+        let targetCam = player.x - canvas.width / 2;
+        camX += (targetCam - camX) * 0.1;
+        camX = Math.max(0, Math.min(camX, map.width - canvas.width));
+    }
+
+    function drawBear(x, y, color, isMoving = false, activity = "idle", forcedSide = null) {
+        let jumpCycle = activity === "jump" ? Math.abs(Math.sin(Date.now() / 200)) * 16 : 0;
+        let drawY = y - jumpCycle;
+        let bodyWidth = isMoving ? 34 : 40;
+        let drawX = isMoving ? x + (40 - bodyWidth) / 2 : x;
+
+        let side = 0;
+        if (forcedSide !== null) { side = forcedSide; }
+        else if (isMoving) { side = controls.left ? -1 : (controls.right ? 1 : 0); }
+
+        let isLookingSide = side !== 0;
+        let faceOffset = isLookingSide ? 8 * side : 0;
+
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
+        ctx.beginPath(); ctx.ellipse(x + 20, y + 40, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(drawX + (isLookingSide ? (side === -1 ? 10 : 8) : 8), drawY + 2, 8, 0, Math.PI * 2);
+        ctx.arc(drawX + (isLookingSide ? (side === -1 ? 24 : 32) : 32), drawY + 2, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath(); ctx.roundRect(drawX, drawY, bodyWidth, 40, 12); ctx.fill();
+
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.beginPath();
+        ctx.ellipse(drawX + (bodyWidth / 2) + faceOffset, drawY + 28, isLookingSide ? 7 : 10, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#3d2b2b";
+        ctx.beginPath();
+        ctx.arc(drawX + (bodyWidth / 2) + (isLookingSide ? faceOffset * 1.2 : 0), drawY + 25, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "black";
+        if (isLookingSide) {
+            ctx.beginPath();
+            ctx.arc(drawX + (bodyWidth / 2) + faceOffset + (2 * side), drawY + 18, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.arc(drawX + 12, drawY + 18, 3, 0, Math.PI * 2);
+            ctx.arc(drawX + 28, drawY + 18, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.fillStyle = color;
+        if (isMoving) {
+            let legSpread = Math.sin(Date.now() / 100) * 6;
+            ctx.beginPath();
+            ctx.arc(drawX + 10 + legSpread, drawY + 40, 6, 0, Math.PI * 2);
+            ctx.arc(drawX + 24 - legSpread, drawY + 40, 6, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.arc(drawX + 8, drawY + 40, 7, 0, Math.PI * 2);
+            ctx.arc(drawX + 32, drawY + 40, 7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function drawCloud(x, y) {
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.beginPath();
+        ctx.arc(x, y, 22, 0, Math.PI * 2);
+        ctx.arc(x + 28, y - 12, 28, 0, Math.PI * 2);
+        ctx.arc(x + 56, y, 22, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawCar(x, y, color, w, h) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.roundRect(x, y - h, w, h, 8); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.roundRect(x + 15, y - h - 22, w - 28, 22, [6, 6, 0, 0]); ctx.fill();
+        ctx.fillStyle = "rgba(150,220,255,0.7)";
+        ctx.beginPath(); ctx.roundRect(x + 19, y - h - 19, w - 36, 16, 4); ctx.fill();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath(); ctx.arc(x + 15, y + 2, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + w - 15, y + 2, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#888";
+        ctx.beginPath(); ctx.arc(x + 15, y + 2, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + w - 15, y + 2, 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawBuildingWindows(bx, by, bw, bh, cols, rows, wColor = "rgba(150,220,255,0.6)") {
+        let padX = 12, padY = 15, ww = (bw - padX * 2 - (cols - 1) * 8) / cols;
+        let wh = (bh - padY * 2 - (rows - 1) * 10) / rows;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                ctx.fillStyle = (r + c) % 3 === 0 ? "rgba(241,196,15,0.5)" : wColor;
+                ctx.fillRect(bx + padX + c * (ww + 8), by + padY + r * (wh + 10), ww, wh);
+            }
+        }
+    }
+
+    function drawStreetScene() {
+        const floorY = map.floorY;
+        const skyH = floorY - 60;
+
+        let skyGrad = ctx.createLinearGradient(0, 0, 0, skyH);
+        skyGrad.addColorStop(0, "#87ceeb");
+        skyGrad.addColorStop(1, "#c9e8f5");
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(-200, 0, map.width + 400, skyH);
+
+        for (let i = 0; i < 8; i++) drawCloud(i * 720 + 100, 60 + (i % 3) * 25);
+
+        ctx.fillStyle = "#f9ca24";
+        ctx.beginPath(); ctx.arc(4800, 80, 45, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(249,202,36,0.2)";
+        ctx.beginPath(); ctx.arc(4800, 80, 75, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = "#bdc3c7";
+        ctx.fillRect(-200, floorY - 120, map.width + 400, 120);
+
+        ctx.fillStyle = "#555f6d";
+        ctx.fillRect(-200, floorY - 60, map.width + 400, 90);
+
+        ctx.setLineDash([60, 40]);
+        ctx.strokeStyle = "#f9ca24";
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(-200, floorY - 30); ctx.lineTo(map.width + 200, floorY - 30); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#d5d8dc";
+        ctx.fillRect(-200, floorY - 5, map.width + 400, 40);
+
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(-200, floorY - 7, map.width + 400, 4);
+
+        const buildings = [
+            { x: 0, w: 200, h: 200, color: "#ecf0f1", roof: "#2c3e50" },
+            { x: 220, w: 180, h: 260, color: "#d5dbdb", roof: "#1a252f" },
+            { x: 430, w: 160, h: 180, color: "#fadbd8", roof: "#c0392b" },
+            { x: 620, w: 220, h: 300, color: "#e8f8f5", roof: "#1e8449" },
+            { x: 870, w: 150, h: 200, color: "#fef9e7", roof: "#b7950b" },
+            { x: 1050, w: 200, h: 240, color: "#eaf2ff", roof: "#1a5276" },
+            { x: 1280, w: 180, h: 180, color: "#f9ebea", roof: "#922b21" },
+            { x: 1490, w: 240, h: 310, color: "#f5eef8", roof: "#6c3483" },
+            { x: 1760, w: 160, h: 200, color: "#e8f8f5", roof: "#1a8a5e" },
+            { x: 1950, w: 200, h: 260, color: "#fdfefe", roof: "#2e4057" },
+            { x: 2180, w: 180, h: 190, color: "#fef5e7", roof: "#d68910" },
+            { x: 2400, w: 220, h: 230, color: "#eaf2ff", roof: "#154360" },
+            { x: 2650, w: 160, h: 200, color: "#fdedec", roof: "#c0392b" },
+            { x: 2840, w: 200, h: 280, color: "#e8f5e9", roof: "#145a32" },
+            { x: 3070, w: 180, h: 210, color: "#fef9e7", roof: "#7e5109" },
+            { x: 3280, w: 240, h: 250, color: "#f0f3f4", roof: "#2e4057" },
+            { x: 3550, w: 160, h: 180, color: "#f9f9f9", roof: "#1c2833" },
+            { x: 3740, w: 200, h: 300, color: "#eaecee", roof: "#212f3c" },
+        ];
+
+        buildings.forEach(b => {
+            let bTopY = floorY - 120 - b.h;
+            ctx.fillStyle = b.color;
+            ctx.fillRect(b.x, bTopY, b.w, b.h);
+            ctx.fillStyle = b.roof;
+            ctx.fillRect(b.x, bTopY - 15, b.w, 15);
+            let cols = Math.floor(b.w / 55);
+            let rows = Math.floor(b.h / 60);
+            drawBuildingWindows(b.x, bTopY, b.w, b.h, Math.max(cols, 2), Math.max(rows, 2));
+        });
+
+        const trees = [600, 1000, 1400, 2000, 2700, 3300, 3900];
+        trees.forEach(tx => {
+            ctx.fillStyle = "#6F4E37";
+            ctx.fillRect(tx, floorY - 90, 16, 60);
+            ctx.fillStyle = "#27ae60";
+            ctx.beginPath(); ctx.arc(tx + 8, floorY - 100, 32, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#2ecc71";
+            ctx.beginPath(); ctx.arc(tx + 8, floorY - 115, 20, 0, Math.PI * 2); ctx.fill();
+        });
+
+        const poles = [400, 1200, 2000, 2800, 3600, 4400];
+        poles.forEach(px => {
+            ctx.strokeStyle = "#555";
+            ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(px, floorY - 5); ctx.lineTo(px, floorY - 110); ctx.stroke();
+            ctx.strokeStyle = "#555";
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(px - 20, floorY - 110); ctx.lineTo(px + 20, floorY - 110); ctx.stroke();
+            ctx.fillStyle = "#f9ca24";
+            ctx.beginPath(); ctx.arc(px - 20, floorY - 112, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(px + 20, floorY - 112, 5, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // PARADA DE ÔNIBUS
+        {
+            const bx = PARADA_X - 40;
+            ctx.fillStyle = "#2c3e50";
+            ctx.fillRect(bx, floorY - 160, 130, 15);
+            ctx.fillStyle = "#34495e";
+            ctx.fillRect(bx, floorY - 145, 8, 115);
+            ctx.fillRect(bx + 122, floorY - 145, 8, 115);
+            ctx.fillStyle = "rgba(150,220,255,0.35)";
+            ctx.fillRect(bx + 8, floorY - 145, 114, 100);
+            ctx.fillStyle = "#2c3e50";
+            ctx.fillRect(bx + 15, floorY - 138, 100, 36);
+            ctx.fillStyle = "#f9ca24";
+            ctx.font = "bold 10px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("314 – ABREULÂNDIA", bx + 65, floorY - 124);
+            ctx.fillStyle = "white";
+            ctx.font = "9px Arial";
+            ctx.fillText("502 – Jurema", bx + 65, floorY - 111);
+            ctx.fillStyle = "#95a5a6";
+            ctx.fillRect(bx + 12, floorY - 50, 106, 14);
+            ctx.fillRect(bx + 12, floorY - 65, 12, 16);
+            ctx.fillRect(bx + 106, floorY - 65, 12, 16);
+
+            if (!missionLirio || !missionMarket) {
+                ctx.fillStyle = "rgba(200,50,50,0.8)";
+            } else {
+                ctx.fillStyle = missionBus ? "rgba(40,180,40,0.8)" : (Math.sin(Date.now() / 200) > 0 ? "rgba(255,94,94,0.9)" : "rgba(200,50,50,0.5)");
+            }
+            ctx.font = "bold 14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("🚌 PARADA", bx + 65, floorY - 168);
+        }
+
+        // MERCADO
+        {
+            const mx = MERCADO_X - 80;
+            const mw = 200, mh = 180;
+            const mTopY = floorY - 120 - mh;
+
+            ctx.fillStyle = "#ecf0f1";
+            ctx.fillRect(mx, mTopY, mw, mh + 120);
+            ctx.fillStyle = "#2980b9";
+            ctx.fillRect(mx - 10, mTopY - 15, mw + 20, 20);
+            ctx.fillStyle = "#3498db";
+            ctx.fillRect(mx, mTopY - 2, mw, 30);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("🛒 MERCADINHO", mx + mw / 2, mTopY + 18);
+            ctx.fillStyle = "rgba(150,220,255,0.6)";
+            ctx.fillRect(mx + mw / 2 - 25, floorY - 120, 50, 80);
+            ctx.strokeStyle = "#2980b9"; ctx.lineWidth = 2;
+            ctx.strokeRect(mx + mw / 2 - 25, floorY - 120, 50, 80);
+            ctx.fillStyle = "rgba(200,240,255,0.5)";
+            ctx.fillRect(mx + 15, mTopY + 35, 70, 50);
+            ctx.fillRect(mx + mw - 85, mTopY + 35, 70, 50);
+            ctx.font = "20px serif";
+            ctx.fillText("🍦", mx + 35, mTopY + 70);
+            ctx.fillText("🦊", mx + mw - 55, mTopY + 70);
+
+            let allBought = inventory.sorvete && inventory.pelucia;
+            ctx.fillStyle = missionMarket ? "rgba(40,180,40,0.9)" : (Math.sin(Date.now() / 200) > 0 ? "rgba(255,94,94,0.9)" : "rgba(200,50,50,0.5)");
+            ctx.font = "bold 13px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(missionMarket ? "✓ COMPRAS FEITAS" : "🛒 ENTRAR", mx + mw / 2, mTopY - 20);
+        }
+
+        // FLORICULTURA
+        {
+            const fx = FLORICULTURA_X - 70;
+            const fw = 180, fh = 160;
+            const fTopY = floorY - 120 - fh;
+
+            ctx.fillStyle = "#fce4ec";
+            ctx.fillRect(fx, fTopY, fw, fh + 120);
+            ctx.fillStyle = "#e91e63";
+            ctx.fillRect(fx - 10, fTopY - 18, fw + 20, 22);
+            ctx.fillStyle = "#f48fb1";
+            ctx.fillRect(fx, fTopY - 3, fw, 28);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 12px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("🌸 FLORICULTURA", fx + fw / 2, fTopY + 14);
+            ctx.font = "22px serif";
+            ctx.fillText("🌷", fx + 20, fTopY + 55);
+            ctx.fillText("🌻", fx + 70, fTopY + 50);
+            ctx.fillText("🌼", fx + 120, fTopY + 55);
+            ctx.fillText("🌹", fx + 45, fTopY + 95);
+            ctx.fillText("🌺", fx + 95, fTopY + 95);
+            ctx.fillStyle = "rgba(200,150,180,0.5)";
+            ctx.fillRect(fx + fw / 2 - 22, floorY - 120, 44, 75);
+            ctx.strokeStyle = "#e91e63"; ctx.lineWidth = 2;
+            ctx.strokeRect(fx + fw / 2 - 22, floorY - 120, 44, 75);
+
+            ctx.font = "18px serif";
+            ctx.fillText("🌸", fx + fw / 2, floorY - 130);
+
+            ctx.fillStyle = inventory.lirio ? "rgba(40,180,40,0.9)" : (Math.sin(Date.now() / 200) > 0 ? "rgba(255,94,94,0.9)" : "rgba(200,50,50,0.5)");
+            ctx.font = "bold 13px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(inventory.lirio ? "✓ LÍRIO COMPRADO" : "🌸 COMPRAR LÍRIO", fx + fw / 2, fTopY - 22);
+        }
+
+        cars.forEach(c => { drawCar(c.x, floorY - 65, c.color, c.w, c.h); });
+    }
+
+    function drawHUD() {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.beginPath(); ctx.roundRect(8, 8, 290, 58, 8); ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText("INVENTÁRIO", 18, 22);
+
+        const slots = [
+            { key: "lirio", icon: "🌸", label: "Lírio" },
+            { key: "sorvete", icon: "🍦", label: "Sorvete" },
+            { key: "pelucia", icon: "🦊", label: "Pelúcia" },
+            { key: "_empty", icon: "—", label: "Vazio" },
+        ];
+
+        slots.forEach((slot, i) => {
+            let sx = 18 + i * 68;
+            let sy = 26;
+            let haItem = slot.key !== "_empty" && inventory[slot.key];
+
+            ctx.fillStyle = haItem ? "rgba(40,180,40,0.4)" : "rgba(255,255,255,0.1)";
+            ctx.beginPath(); ctx.roundRect(sx, sy, 60, 32, 5); ctx.fill();
+            ctx.strokeStyle = haItem ? "#2ecc71" : "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(sx, sy, 60, 32);
+
+            ctx.font = haItem ? "16px serif" : "14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillStyle = haItem ? "white" : "rgba(255,255,255,0.3)";
+            ctx.fillText(haItem ? slot.icon : "—", sx + 30, sy + 20);
+        });
+
+        if (isPaused) {
+            ctx.fillStyle = "rgba(0,0,0,0.55)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 30px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("PAUSE", canvas.width / 2, canvas.height / 2);
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(-camX, 0);
+
+        drawStreetScene();
+
+        npcs.forEach(n => {
+            drawBear(n.x, map.floorY - player.h, n.color, false, n.activity);
+        });
+
+        let isMoving = controls.left || controls.right;
+        drawBear(player.x, player.y, "#ff5e5e", isMoving);
+
+        ctx.restore();
+
+        drawHUD();
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+    
+    function checkOrientation() {
+        if (innerHeight > innerWidth) {
+            document.body.innerHTML = `
+            <div style="background:#3d2b2b;position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:sans-serif;padding:20px;text-align:center;">
+                <p style="font-size:20px;margin-bottom:15px;">Gire o celular para o modo Paisagem! 🔄</p>
+                <img src="https://jogo.4.inpevcampolimpo.org.br/links/media/artes-assets/portrait-warning.gif" style="max-width:80%; border: 4px solid #ff5e5e; border-radius:10px;">
+            </div>`;
+        }
+    }
+    
+    setTimeout(() => loop(), 100);
+    
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("load", checkOrientation);
+    </script>
+</body>
+</html>

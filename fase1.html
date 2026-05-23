@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bears Love Story - Fase 1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: "Comic Sans MS", system-ui, sans-serif;
+            touch-action: none;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        canvas { display: block; background: #ffffff; }
+        .console-body { background-color: #3d2b2b; }
+        .btn-red { background-color: #ff5e5e; border: 2px solid #ffffff; color: white; }
+        .btn-red:active { background-color: #e04a4a; }
+
+        #transition-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-family: "Comic Sans MS", sans-serif;
+        }
+        #transition-overlay.active { display: flex; }
+        #transition-overlay h2 { font-size: 2rem; margin-bottom: 1rem; }
+        #transition-overlay p { font-size: 1rem; opacity: 0.7; }
+    </style>
+</head>
+
+<body class="flex items-center justify-center h-screen">
+
+    <div id="transition-overlay">
+        <h2>🐻 Fase 2 Carregando...</h2>
+        <p>O ursinho saiu da escola!</p>
+    </div>
+
+    <div class="console-body relative w-[95vw] h-[90vh] rounded-[3rem] shadow-2xl flex flex-col p-6 border-b-8 border-black/40">
+        <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest">
+            My Little Love Story
+        </div>
+        <div class="flex flex-1 items-center justify-between gap-4 mt-4">
+            <div class="relative w-32 h-32 flex items-center justify-center">
+                <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▲</button>
+                <button id="left" class="absolute left-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">◀</button>
+                <button id="right" class="absolute right-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">▶</button>
+                <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▼</button>
+                <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
+            </div>
+
+            <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-sm overflow-hidden shadow-inner">
+                <canvas id="game"></canvas>
+                <div id="dialog" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] bg-black/80 text-white p-2 rounded text-xs z-20 text-center"></div>
+            </div>
+
+            <div class="w-32 flex justify-center">
+                <button id="action" class="btn-red w-24 h-24 rounded-full shadow-xl flex items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-white/30 rounded-full"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-end justify-between mt-4 px-8">
+            <div class="text-white text-[10px] leading-tight">
+                <span class="font-bold">Fase 1 - Objetivo:</span><br>
+                • Vá à Coordenação (esquerda), pegue a escada e leve ao beco (extrema direita). Suba a escada para sair!
+            </div>
+            <div class="flex gap-4">
+                <button id="pauseBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Pause <span class="text-xs">II</span></button>
+                <button id="playBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Play <span class="text-xs">▶</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const dialog = document.getElementById("dialog");
+
+        let isPaused = false;
+        const player = { x: 150, y: 0, w: 40, h: 40, speed: 6, baseY: 0, climbY: 0, isClimbing: false, climbProgress: 0 };
+        const map = { width: 4000, floorY: 0 };
+        const controls = { left: false, right: false };
+
+        // Estado: "start" -> "has_ladder" -> "ladder_placed" -> "climbing" -> "escaped"
+        let gameStage = "start";
+        let transitionStarted = false;
+
+        const npcs = [
+            { x: 500, color: "#48dbfb", text: "Urso Azul: Olá! Se exercitar é ótimo para a saúde, não concorda?", activity: "jump" },
+            { x: 1100, color: "#1dd1a1", text: "Mestre: Use o botão redondo para interagir com o cenário e falar com os ursos.", activity: "idle" },
+            { id: "conv1", x: 1800, color: "#a29bfe", text: "Urso Roxo: Ouvi falar que dá para pular o muro nesse jogo.", activity: "idle", side: 1 },
+            { id: "conv2", x: 1880, color: "#81ecec", text: "Urso Ciano: Sim, basta posicionar a escada no beco.", activity: "idle", side: -1 }
+        ];
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            map.floorY = canvas.height - 30;
+            if (!player.isClimbing) {
+                player.y = map.floorY - player.h;
+            }
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        function bind(id, key) {
+            const el = document.getElementById(id);
+            const start = (e) => { e.preventDefault(); controls[key] = true; };
+            const end = () => controls[key] = false;
+            el.addEventListener("touchstart", start);
+            el.addEventListener("touchend", end);
+            el.addEventListener("mousedown", start);
+            el.addEventListener("mouseup", end);
+        }
+        bind("left", "left");
+        bind("right", "right");
+
+        document.getElementById("action").addEventListener("click", () => {
+            if (isPaused) return;
+
+            // Subir a escada no beco
+            if (gameStage === "ladder_placed" && player.x > 3830 && !player.isClimbing) {
+                gameStage = "climbing";
+                player.isClimbing = true;
+                player.climbProgress = 0;
+                showDialog("Subindo a escada... chegou a liberdade! 🪜");
+                return;
+            }
+
+            if (player.x < -750 && player.x > -870) {
+                if (gameStage === "start") {
+                    gameStage = "has_ladder";
+                    showDialog("Você entrou na Coordenação e recolheu a Escada! Leve-a para o beco à direita.");
+                } else if (gameStage === "has_ladder") {
+                    showDialog("Você já pegou a escada. Vá para o beco na extrema direita!");
+                } else {
+                    showDialog("A sala da coordenação está trancada agora.");
+                }
+                return;
+            }
+
+            if (player.x > 3800) {
+                if (gameStage === "has_ladder") {
+                    gameStage = "ladder_placed";
+                    showDialog("Escada posicionada! Agora use o botão de ação para SUBIR! 🪜");
+                } else if (gameStage === "start") {
+                    showDialog("O muro é muito alto... Preciso de uma escada na Coordenação!");
+                } else if (gameStage === "ladder_placed") {
+                    showDialog("A escada está pronta! Pressione o botão de ação para subir!");
+                }
+                return;
+            }
+
+            let spokeToNpc = false;
+            npcs.forEach(n => {
+                if (Math.abs(player.x - n.x) < 60) {
+                    spokeToNpc = true;
+                    if (n.id === "conv2" && gameStage === "has_ladder") {
+                        showDialog("Urso Ciano: Olha, você conseguiu a escada! Corre pro beco!");
+                    } else if (n.id === "conv1" && (gameStage === "ladder_placed" || gameStage === "climbing")) {
+                        showDialog("Urso Roxo: Você colocou a escada! Sobe logo!");
+                    } else {
+                        showDialog(n.text);
+                    }
+                }
+            });
+
+            if (!spokeToNpc && (player.x >= -750 && player.x <= 3800)) {
+                showDialog("Nada para interagir aqui...");
+            }
+        });
+
+        document.getElementById("pauseBtn").addEventListener("click", () => isPaused = true);
+        document.getElementById("playBtn").addEventListener("click", () => isPaused = false);
+
+        function showDialog(text) {
+            dialog.textContent = text;
+            dialog.classList.remove("hidden");
+            setTimeout(() => dialog.classList.add("hidden"), 4000);
+        }
+
+        let camX = 0;
+
+        function update() {
+            if (isPaused) return;
+
+            // Animação de subida da escada
+            if (player.isClimbing) {
+                player.climbProgress += 0.015;
+                player.y = (map.floorY - player.h) - (player.climbProgress * 260);
+                if (player.climbProgress >= 1 && !transitionStarted) {
+                    transitionStarted = true;
+                    gameStage = "escaped";
+                    document.getElementById("transition-overlay").classList.add("active");
+                    setTimeout(() => {
+                        window.location.href = "fase2.html";
+                    }, 2000);
+                }
+                return;
+            }
+
+            if (controls.left) player.x -= player.speed;
+            if (controls.right) player.x += player.speed;
+
+            player.x = Math.max(-1000, Math.min(player.x, map.width - player.w));
+
+            if (player.x < 250) {
+                let rampaProgresso = (250 - player.x) / 250;
+                player.baseY = map.floorY - (Math.min(rampaProgresso, 1) * 60);
+            } else {
+                player.baseY = map.floorY;
+            }
+
+            player.y = player.baseY - player.h;
+
+            let targetCam = player.x - canvas.width / 2;
+            camX += (targetCam - camX) * 0.1;
+            camX = Math.max(-1000, Math.min(camX, map.width - canvas.width));
+        }
+
+        function drawBear(x, y, color, isMoving = false, activity = "idle", forcedSide = null) {
+            let jumpCycle = activity === "jump" ? Math.abs(Math.sin(Date.now() / 200)) * 20 : 0;
+            let drawY = y - jumpCycle;
+            let bodyWidth = isMoving ? 34 : 40;
+            let drawX = isMoving ? x + (40 - bodyWidth) / 2 : x;
+
+            let side = 0;
+            if (forcedSide !== null) { side = forcedSide; }
+            else if (isMoving) { side = controls.left ? -1 : (controls.right ? 1 : 0); }
+
+            let isLookingSide = side !== 0;
+            let faceOffset = isLookingSide ? 8 * side : 0;
+
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.beginPath(); ctx.ellipse(x + 20, y + 40, 15 - (jumpCycle / 4), 5, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(drawX + (isLookingSide ? (side === -1 ? 10 : 8) : 8), drawY + 2, 8, 0, Math.PI * 2);
+            ctx.arc(drawX + (isLookingSide ? (side === -1 ? 24 : 32) : 32), drawY + 2, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath(); ctx.roundRect(drawX, drawY, bodyWidth, 40, 12); ctx.fill();
+
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.beginPath();
+            ctx.ellipse(drawX + (bodyWidth / 2) + faceOffset, drawY + 28, isLookingSide ? 7 : 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#3d2b2b";
+            ctx.beginPath();
+            ctx.arc(drawX + (bodyWidth / 2) + (isLookingSide ? faceOffset * 1.2 : 0), drawY + 25, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "black";
+            if (isLookingSide) {
+                ctx.beginPath();
+                ctx.arc(drawX + (bodyWidth / 2) + faceOffset + (2 * side), drawY + 18, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(drawX + 12, drawY + 18, 3, 0, Math.PI * 2);
+                ctx.arc(drawX + 28, drawY + 18, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = color;
+            if (isMoving) {
+                let legSpread = Math.sin(Date.now() / 100) * 6;
+                ctx.beginPath();
+                ctx.arc(drawX + 10 + legSpread, drawY + 40, 6, 0, Math.PI * 2);
+                ctx.arc(drawX + 24 - legSpread, drawY + 40, 6, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(drawX + 8, drawY + 40, 7, 0, Math.PI * 2);
+                ctx.arc(drawX + 32, drawY + 40, 7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawCloud(x, y) {
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.arc(x + 25, y - 10, 25, 0, Math.PI * 2);
+            ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawFancyRoof(y, width, startX = 0) {
+            ctx.fillStyle = "#c0392b";
+            ctx.fillRect(startX, y - 25, width - startX, 25);
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(startX, y - 5, width - startX, 12);
+            for (let i = startX + 200; i <= width; i += 600) {
+                let lx = i;
+                ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(lx, y + 5); ctx.lineTo(lx, y + 15); ctx.stroke();
+                ctx.fillStyle = "#f1c40f";
+                ctx.beginPath(); ctx.arc(lx, y + 20, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "rgba(241, 196, 15, 0.3)";
+                ctx.beginPath(); ctx.arc(lx, y + 20, 15, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        function drawSchoolEnvironment() {
+            const wallHeight = 220;
+            const wallTopY = map.floorY - wallHeight;
+            const midPoint = map.floorY - wallHeight / 2;
+
+            ctx.fillStyle = "#a5d6a7"; ctx.fillRect(-1000, wallTopY, map.width + 1000, wallHeight / 2);
+            ctx.fillStyle = "#f5f5dc"; ctx.fillRect(-1000, midPoint, map.width + 1000, wallHeight / 2);
+
+            const classNames = ["DS", "CTB", "REDES", "MULT"];
+            for (let i = 0; i < 4; i++) {
+                let px = (map.width / 5) * (i + 1) - 40;
+                if (px > 250) {
+                    ctx.fillStyle = "#6F4E37";
+                    ctx.beginPath(); ctx.roundRect(px, map.floorY - 130, 80, 130, [5, 5, 0, 0]); ctx.fill();
+                    ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center";
+                    ctx.fillText(classNames[i], px + 40, map.floorY - 60);
+                }
+            }
+
+            ctx.fillStyle = "#add8e6"; ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.roundRect(-600, wallTopY + 30, 300, 110, 5); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-450, wallTopY + 30); ctx.lineTo(-450, wallTopY + 140);
+            ctx.moveTo(-600, wallTopY + 85); ctx.lineTo(-300, wallTopY + 85); ctx.stroke();
+
+            let coordDoorX = -850;
+            let coordDoorY = (map.floorY - 60) - 130;
+            ctx.fillStyle = "#4a3728";
+            ctx.beginPath(); ctx.roundRect(coordDoorX, coordDoorY, 80, 130, [5, 5, 0, 0]); ctx.fill();
+            ctx.fillStyle = "#f39c12";
+            ctx.fillRect(coordDoorX + 10, coordDoorY + 40, 60, 20);
+            ctx.fillStyle = "black"; ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
+            ctx.fillText("COORD.", coordDoorX + 40, coordDoorY + 53);
+
+            if (gameStage === "start" && Math.sin(Date.now() / 200) > 0) {
+                ctx.fillStyle = "#ff5e5e"; ctx.font = "bold 16px Arial";
+                ctx.fillText("▼ ENTRAR", coordDoorX + 40, coordDoorY + 15);
+            }
+
+            if (gameStage === "has_ladder" && Math.sin(Date.now() / 200) > 0) {
+                ctx.fillStyle = "#ff5e5e"; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
+                ctx.fillText("▲ COLOCAR", map.width - 100, map.floorY - 140);
+            }
+
+            if (gameStage === "ladder_placed" && Math.sin(Date.now() / 200) > 0) {
+                ctx.fillStyle = "#2ecc71"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center";
+                ctx.fillText("🪜 SUBIR!", map.width - 80, map.floorY - 300);
+            }
+
+            drawFancyRoof(wallTopY, map.width, -1000);
+        }
+
+        function drawEscada(x, y, angular) {
+            ctx.save();
+            ctx.translate(x, y);
+            if (angular) ctx.rotate(0.05);
+
+            ctx.strokeStyle = "#d35400"; ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(0, -240);
+            ctx.moveTo(60, 0); ctx.lineTo(60, -240);
+            ctx.stroke();
+
+            ctx.lineWidth = 6;
+            for (let h = -40; h >= -200; h -= 40) {
+                ctx.beginPath(); ctx.moveTo(0, h); ctx.lineTo(60, h); ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#87CEEB";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(-camX, 0);
+
+            for (let i = 0; i < 6; i++) drawCloud(i * 800 - 600, 70 + (i % 2 * 30));
+
+            drawSchoolEnvironment();
+
+            ctx.fillStyle = "#7f8c8d";
+            ctx.beginPath();
+            ctx.moveTo(-1000, map.floorY - 60);
+            ctx.lineTo(0, map.floorY - 60);
+            ctx.lineTo(250, map.floorY);
+            ctx.lineTo(map.width, map.floorY);
+            ctx.lineTo(map.width, map.floorY + 80);
+            ctx.lineTo(-1000, map.floorY + 80);
+            ctx.closePath();
+            ctx.fill();
+
+            if (gameStage === "ladder_placed" || gameStage === "climbing" || gameStage === "escaped") {
+                drawEscada(3900, map.floorY - 5, true);
+            }
+
+            npcs.forEach(n => {
+                let yPos = n.x < 0 ? map.floorY - 60 : map.floorY;
+                drawBear(n.x, yPos - player.h, n.color, false, n.activity, n.side !== undefined ? n.side : null);
+            });
+
+            let isMoving = (controls.left || controls.right) && !player.isClimbing;
+            drawBear(player.x, player.y, "#ff5e5e", isMoving);
+
+            ctx.restore();
+
+            // HUD
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.fillRect(10, 10, 210, 30);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 11px Arial";
+            ctx.textAlign = "left";
+            let statusText = "Inventário: Vazio";
+            if (gameStage === "has_ladder") statusText = "Inventário: 🪜 Escada";
+            if (gameStage === "ladder_placed") statusText = "Inventário: Vazio";
+            if (gameStage === "climbing") statusText = "Subindo...";
+            ctx.fillText(statusText, 20, 28);
+
+            // Barra de progresso de subida
+            if (player.isClimbing) {
+                ctx.fillStyle = "rgba(0,0,0,0.7)";
+                ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 20, 200, 30);
+                ctx.fillStyle = "#2ecc71";
+                ctx.fillRect(canvas.width / 2 - 98, canvas.height / 2 - 18, Math.min(player.climbProgress * 196, 196), 26);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 12px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("Subindo a escada...", canvas.width / 2, canvas.height / 2 - 28);
+            }
+
+            if (isPaused) {
+                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 30px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("PAUSE", canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bears Love Story – Fase 3</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Patrick+Hand&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Comic Sans MS", system-ui, sans-serif;
+            touch-action: none;
+            overflow: hidden;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100dvh;
+            width: 100vw;
+        }
+
+        .console-body {
+            background-color: #3d2b2b;
+            width: 95vw;
+            height: 88dvh;
+            /* Reduzido para caber no celular */
+            max-height: 92dvh;
+            border-radius: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            background: #fff;
+        }
+
+        .btn-red {
+            background-color: #ff5e5e;
+            border: 2px solid #fff;
+            color: #fff;
+        }
+
+        .btn-red:active {
+            background-color: #e04a4a;
+        }
+
+        .title {
+            position: absolute;
+            top: 16px;
+            left: 50px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* === DIÁLOGO COM SCROLL === */
+        #dialog-modal {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 60;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        #dialog-modal.active {
+            display: flex;
+        }
+
+        .dialog-box {
+            width: 100%;
+            max-width: 520px;
+            background: #fff8f0;
+            border: 4px solid #ff5e5e;
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 72dvh;
+            /* Permite rolagem quando necessário */
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+        }
+
+        .dialog-speaker {
+            font-family: "Caveat", cursive;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ff5e5e;
+            margin-bottom: 8px;
+        }
+
+        .dialog-text {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #3d2b2b;
+            margin-bottom: 16px;
+        }
+
+        .dialog-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dialog-opt {
+            background: #3d2b2b;
+            color: white;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: "Patrick Hand", cursive;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .dialog-opt:hover {
+            border-color: #ff5e5e;
+            background: #5a3f3f;
+        }
+
+        .dialog-opt.final-opt {
+            background: linear-gradient(135deg, #ff5e5e, #e84393);
+            font-weight: bold;
+        }
+
+        /* ── CENA FINAL ── */
+        #ending-screen {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: #0a0a0a;
+            z-index: 90;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ending-screen.active {
+            display: flex;
+        }
+
+        #ending-canvas {
+            display: block;
+        }
+
+        /* ── CRÉDITOS ── */
+        #credits {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a0a14 100%);
+            z-index: 95;
+            overflow: hidden;
+        }
+
+        #credits.active {
+            display: block;
+        }
+
+        #credits-inner {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            font-family: "Caveat", cursive;
+            color: white;
+            animation: scrollUp 18s linear forwards;
+            bottom: -100%;
+        }
+
+        @keyframes scrollUp {
+            0% {
+                bottom: -100%;
+            }
+
+            100% {
+                bottom: 130%;
+            }
+        }
+
+        #credits-inner h2 {
+            font-size: 2rem;
+            color: #ff5e5e;
+            margin-bottom: 8px;
+        }
+
+        #credits-inner p {
+            font-size: 1.05rem;
+            opacity: .85;
+            line-height: 1.8;
+            margin-bottom: 6px;
+        }
+
+        #credits-inner .small {
+            font-size: .85rem;
+            opacity: .6;
+        }
+
+        #credits-inner .heart {
+            font-size: 3rem;
+            margin: 24px 0 8px;
+        }
+
+        #final-message {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: #0a0a0a;
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #final-message.active {
+            display: flex;
+        }
+
+        #final-message p {
+            font-family: "Caveat", cursive;
+            font-size: large;
+            color: #ff5e5e;
+            text-align: center;
+            animation: fadeInMsg 2s ease forwards;
+            opacity: 0;
+            text-shadow: 0 0 40px rgba(255, 94, 94, .6);
+        }
+
+        @keyframes fadeInMsg {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* TRANSIÇÃO */
+        #transition-in {
+            display: flex;
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-family: "Caveat", cursive;
+            animation: fadeOutTrans 1s ease 1.5s forwards;
+        }
+
+        @keyframes fadeOutTrans {
+            to {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
+
+        #transition-in h2 {
+            font-size: 2rem;
+            color: #ff5e5e;
+        }
+
+        #transition-in p {
+            font-size: 1rem;
+            opacity: .7;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TRANSIÇÃO DE ENTRADA -->
+    <div id="transition-in">
+        <h2>🐻 Fase 3 – A Chegada</h2>
+        <p>Quase lá, ursinho...</p>
+    </div>
+
+    <div class="console-body relative w-[95vw] h-[88dvh] rounded-[3rem] shadow-2xl flex flex-col border-b-8 border-black/40 overflow-hidden">
+    
+    <!-- TÍTULO -->
+    <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest z-10">
+        My Little Love Story – Fase 3
+    </div>
+
+    <div class="flex flex-1 items-center justify-between gap-4 p-4">
+
+        <!-- D-PAD -->
+        <div class="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
+            <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▲</button>
+            <button id="left" class="absolute left-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">◀</button>
+            <button id="right" class="absolute right-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">▶</button>
+            <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▼</button>
+            <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
+        </div>
+
+        <!-- TELA DO JOGO -->
+        <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-xl overflow-hidden shadow-inner" id="game-wrap">
+            <canvas id="game"></canvas>
+
+            <!-- NOTIFICAÇÃO -->
+            <div id="notif" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-[88%] bg-black/80 text-white p-3 rounded text-sm z-20 text-center"></div>
+
+            <!-- MODAL DIÁLOGO -->
+            <div id="dialog-modal">
+                <div class="dialog-box">
+                    <canvas id="dialog-portrait" width="80" height="80" style="border-radius:50%;border:3px solid #ff5e5e;margin:0 auto 12px;display:block;"></canvas>
+                    <div class="dialog-speaker" id="d-speaker"></div>
+                    <div class="dialog-text" id="d-text"></div>
+                    <div class="dialog-options" id="d-options"></div>
+                </div>
+            </div>
+
+            <!-- CENA FINAL -->
+            <div id="ending-screen" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                <canvas id="ending-canvas"></canvas>
+            </div>
+
+            <!-- CRÉDITOS -->
+            <div id="credits" class="hidden absolute inset-0 bg-black overflow-hidden">
+                <div id="credits-inner">
+                    <p class="small" style="opacity:.4;font-size:.75rem;">♡ Bears Love Story ♡</p>
+                    <br /><br />
+                    <h2>Fim</h2>
+                    <br />
+                    <p>Uma história de amor<br />sobre coragem, distância<br />e um ursinho teimoso.</p>
+                    <br />
+                    <p class="small">🌸 Lírio do vale entregue com carinho</p>
+                    <p class="small">🍦 Sorvete para adoçar o encontro</p>
+                    <p class="small">🦊 Pelúcia de raposa para nunca esquecer</p>
+                    <br /><br />
+                    <p>Criado com amor ♡</p>
+                    <br /><br />
+                    <div class="heart">♡</div>
+                </div>
+            </div>
+
+            <!-- MENSAGEM FINAL -->
+            <div id="final-message" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                <p>Sofia, eu te amo mil milhões. Conhecer você foi uma das maiores alegrias que já tive, minha raposinha. Obrigado por tudo.</p>
+            </div>
+        </div>
+
+        <!-- BOTÃO AÇÃO -->
+        <div class="w-32 flex justify-center flex-shrink-0">
+            <button id="action" class="btn-red w-24 h-24 rounded-full shadow-xl flex items-center justify-center">
+                <div class="w-16 h-16 border-4 border-white/30 rounded-full"></div>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex items-end justify-between mt-auto px-8 pb-4 text-white text-[10px]">
+        <div class="leading-tight">
+            <span class="font-bold">Fase 3 – Missão:</span><br>
+            Chegue até a casa dela pelo caminho central e converse com a sua namorada ❤️
+        </div>
+        <div class="flex gap-4">
+            <button id="pauseBtn" class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Pause <span class="text-xs">II</span></button>
+            <button id="playBtn" class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Play <span class="text-xs">▶</span></button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // ══════════════════════════════════════════════
+        //  SETUP PRINCIPAL
+        // ══════════════════════════════════════════════
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const notif = document.getElementById("notif");
+
+        let isPaused = false;
+        let modalOpen = false;
+        let inHouse = false;   // true quando dentro da casa
+        let talkingGF = false;
+        let gameEnding = false;
+
+        // Inventário vindo da fase 2 (todos garantidos)
+        const inventory = { lirio: true, sorvete: true, pelucia: true };
+
+        const player = { x: 120, y: 0, w: 40, h: 40, speed: 5 };
+
+        // Mapa externo: rua inspirada nas fotos — muro de tijolo à esquerda, caminho central
+        const mapExt = { width: 2800, floorY: 0 };
+        // Mapa interno (casa): sala de estar
+        const mapInt = { width: 1200, floorY: 0 };
+
+        const controls = { left: false, right: false };
+        let camX = 0;
+        let camY = 0;
+
+        // Posições-chave (mapa externo)
+        const GATEWAY_X = 820;   // entrada do caminho central
+        const HOUSE_DOOR_X = 1380; // porta da casa (ainda no mapa externo — trigger de entrada)
+
+        // Posição da namorada (mapa interno)
+        const GF_X = 560;
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            mapExt.floorY = canvas.height - 30;
+            mapInt.floorY = canvas.height - 30;
+            player.y = (inHouse ? mapInt.floorY : mapExt.floorY) - player.h;
+        }
+        const wrap = document.getElementById("game-wrap");
+        new ResizeObserver(resize).observe(wrap);
+        resize();
+
+        function bind(id, key) {
+            const el = document.getElementById(id);
+            ["touchstart", "mousedown"].forEach(ev => el.addEventListener(ev, e => { e.preventDefault(); controls[key] = true; }));
+            ["touchend", "mouseup"].forEach(ev => el.addEventListener(ev, () => controls[key] = false));
+        }
+        bind("left", "left"); bind("right", "right");
+        document.getElementById("pauseBtn").addEventListener("click", () => isPaused = true);
+        document.getElementById("playBtn").addEventListener("click", () => isPaused = false);
+
+        // ══════════════════════════════════════════════
+        //  UPDATE
+        // ══════════════════════════════════════════════
+        function update() {
+            if (isPaused || modalOpen || gameEnding) return;
+            const curMap = inHouse ? mapInt : mapExt;
+
+            // Movimentação do jogador
+            if (controls.left) player.x -= player.speed;
+            if (controls.right) player.x += player.speed;
+
+            // Mantém o ursinho dentro dos limites laterais do mapa
+            player.x = Math.max(30, Math.min(player.x, curMap.width - player.w - 30));
+
+            // Atualiza a posição vertical com base no chão atual do mapa
+            player.y = curMap.floorY - player.h;
+
+            // CÂMERA CENTRALIZADA 100% (Horizontal e Vertical)
+            camX = player.x - canvas.width / 2 + player.w / 2;
+            camY = player.y - canvas.height / 2 + player.h / 2;
+
+            // Impede a câmera de mostrar o "vazio" lateral
+            camX = Math.max(0, Math.min(camX, curMap.width - canvas.width));
+
+            // Trigger de transição para entrar na casa
+            if (!inHouse && player.x > HOUSE_DOOR_X) {
+                enterHouse();
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  BOTÃO DE AÇÃO
+        // ══════════════════════════════════════════════
+        document.getElementById("action").addEventListener("click", () => {
+            if (isPaused || modalOpen || gameEnding) return;
+
+            if (inHouse) {
+                // Falar com namorada
+                if (Math.abs(player.x - GF_X) < 90) {
+                    startDialogue();
+                } else {
+                    showNotif("Chegue mais perto dela...");
+                }
+                return;
+            }
+
+            // Mapa externo: indicação de caminho
+            if (Math.abs(player.x - GATEWAY_X) < 100) {
+                showNotif("É por aqui! Continue pelo caminho até a porta da casa.");
+            } else {
+                showNotif("Continue andando para a direita pelo caminho.");
+            }
+        });
+
+        // ══════════════════════════════════════════════
+        //  TRANSIÇÃO: RUA → CASA
+        // ══════════════════════════════════════════════
+        function enterHouse() {
+            inHouse = true;
+            player.x = 80;
+            camX = 0;
+            showNotif("Você entrou na casa. Ela está na sala de estar...");
+        }
+
+        // ══════════════════════════════════════════════
+        //  NOTIFICAÇÃO PEQUENA
+        // ══════════════════════════════════════════════
+        function showNotif(text) {
+            notif.textContent = text;
+            notif.classList.remove("hidden");
+            clearTimeout(showNotif._t);
+            showNotif._t = setTimeout(() => notif.classList.add("hidden"), 4000);
+        }
+
+        // ══════════════════════════════════════════════
+        //  SISTEMA DE DIÁLOGO
+        // ══════════════════════════════════════════════
+        // Roteiro:
+        // Fala 0 → namorada recebe com surpresa
+        // Fala 1 → pergunta sobre a viagem
+        // Fala 2 → momento mais emotivo
+        // Fala 3 → abre espaço para o ursinho falar
+        // Fala 4 → namorada fica em silêncio aguardando a declaração
+        // → Resposta final do jogador
+
+        const script = [
+            {
+                speaker: "Ela 🐻‍❤️",
+                text: "...? Você está aqui de verdade?! Achei que você estava longe... como você chegou até aqui?",
+                options: [
+                    "Vim de ônibus, pode acreditar? Peguei o 314!",
+                    "Vim porque precisava te ver. Simples assim.",
+                    "*sorri e abre a mochila mostrando o lírio do vale*",
+                ]
+            },
+            {
+                speaker: "Ela 🐻‍❤️",
+                text: "Você trouxe um lírio... e sorvete?! E isso — é uma raposa de pelúcia?! Você é idiota... mas do jeito mais fofo possível.",
+                options: [
+                    "Sabia que você ia gostar da raposa.",
+                    "Queria que cada coisa lembrasse algo de mim quando eu não estiver aqui.",
+                    "Fiz tudo isso por você. E faria de novo.",
+                ]
+            },
+            {
+                speaker: "Ela 🐻‍❤️",
+                text: "Eu fico com saudade, sabe? Não é fácil. Às vezes eu fico aqui pensando se você também sente...",
+                options: [
+                    "Sinto. Cada dia. Mas saudade prova que o que a gente tem é real.",
+                    "A distância dói, mas pensar em você faz tudo valer a pena.",
+                    "Você nunca precisa duvidar disso. Nunca.",
+                ]
+            },
+            {
+                speaker: "Ela 🐻‍❤️",
+                text: "Às vezes tenho medo que um dia você canse... que a distância seja grande demais. Tenho medo de te perder.",
+                options: [
+                    "Não vou mentir que é fácil. Mas desistir de você? Isso nunca.",
+                    "Esse medo eu entendo. Mas ele não vai acontecer.",
+                    "Você vale cada quilômetro, cada espera, cada saudade.",
+                ]
+            },
+            {
+                speaker: "Ela 🐻‍❤️",
+                text: "...Eu precisava ouvir isso. Mas quero ouvir de você mesmo — com suas palavras. O que você sente de verdade?",
+                options: [
+                    "Eu viajaria mil quilômetros se fosse para ver você bem. Eu te amo, e vou continuar te amando enquanto meu mundo tiver cor, afinal é você quem traz cor a ele.",
+                ],
+                isFinal: true
+            }
+        ];
+
+        let dialogStep = 0;
+
+        function startDialogue() {
+            talkingGF = true;
+            modalOpen = true;
+            dialogStep = 0;
+            renderDialogStep();
+            document.getElementById("dialog-modal").classList.add("active");
+            drawGFPortrait();
+        }
+
+        function renderDialogStep() {
+            const step = script[dialogStep];
+            document.getElementById("d-speaker").textContent = step.speaker;
+            document.getElementById("d-text").textContent = step.text;
+            const optDiv = document.getElementById("d-options");
+            optDiv.innerHTML = "";
+            step.options.forEach((opt, i) => {
+                const btn = document.createElement("button");
+                btn.className = "dialog-opt" + (step.isFinal ? " final-opt" : "");
+                btn.textContent = (step.isFinal ? "❤️ " : "") + opt;
+                btn.addEventListener("click", () => chooseOption(i));
+                optDiv.appendChild(btn);
+            });
+        }
+
+        function chooseOption(i) {
+            const step = script[dialogStep];
+            if (step.isFinal) {
+                // Fim!
+                document.getElementById("dialog-modal").classList.remove("active");
+                modalOpen = false;
+                triggerEnding();
+                return;
+            }
+            dialogStep++;
+            renderDialogStep();
+        }
+
+        function drawGFPortrait() {
+            const pc = document.getElementById("dialog-portrait");
+            const pctx = pc.getContext("2d");
+            pctx.clearRect(0, 0, 80, 80);
+            // Ursa namorada: cor vinho/rosa escuro
+            const color = "#c0392b";
+            // Fundo circular
+            pctx.fillStyle = "#fff0f3";
+            pctx.beginPath(); pctx.arc(40, 40, 38, 0, Math.PI * 2); pctx.fill();
+            // Corpo
+            pctx.fillStyle = color;
+            pctx.beginPath(); pctx.roundRect(18, 32, 44, 32, 10); pctx.fill();
+            // Orelhas
+            pctx.beginPath();
+            pctx.arc(22, 28, 8, 0, Math.PI * 2);
+            pctx.arc(58, 28, 8, 0, Math.PI * 2);
+            pctx.fill();
+            // Focinho
+            pctx.fillStyle = "rgba(255,255,255,.8)";
+            pctx.beginPath(); pctx.ellipse(40, 54, 10, 7, 0, 0, Math.PI * 2); pctx.fill();
+            // Nariz
+            pctx.fillStyle = "#3d2b2b";
+            pctx.beginPath(); pctx.arc(40, 50, 3, 0, Math.PI * 2); pctx.fill();
+            // Olhos com coração
+            pctx.fillStyle = "#3d2b2b";
+            pctx.font = "10px serif"; pctx.textAlign = "center";
+            pctx.fillText("♡", 31, 45);
+            pctx.fillText("♡", 49, 45);
+            // Laço de cabelo
+            pctx.fillStyle = "#ff5e5e";
+            pctx.beginPath(); pctx.arc(58, 22, 5, 0, Math.PI * 2); pctx.fill();
+            pctx.beginPath(); pctx.ellipse(58, 22, 8, 4, 0.5, 0, Math.PI * 2); pctx.fill();
+        }
+
+        // ══════════════════════════════════════════════
+        //  CENA FINAL: ABRAÇO + CRÉDITOS
+        // ══════════════════════════════════════════════
+        function triggerEnding() {
+            gameEnding = true;
+            const endScreen = document.getElementById("ending-screen");
+            endScreen.classList.add("active");
+
+            const ec = document.getElementById("ending-canvas");
+            ec.width = canvas.width;
+            ec.height = canvas.height;
+            const ectx = ec.getContext("2d");
+
+            let heartPulse = 0;
+            let sparkles = Array.from({ length: 30 }, () => ({
+                x: Math.random() * ec.width, y: Math.random() * ec.height,
+                r: Math.random() * 3 + 1, a: Math.random() * Math.PI * 2,
+                speed: Math.random() * .5 + .2, opacity: Math.random()
+            }));
+
+            function drawHugScene(t) {
+                // Fundo degradê romântico
+                let bg = ectx.createRadialGradient(ec.width / 2, ec.height / 2, 40, ec.width / 2, ec.height / 2, Math.max(ec.width, ec.height) / 1.5);
+                bg.addColorStop(0, "#3d0a1a");
+                bg.addColorStop(1, "#0a0005");
+                ectx.fillStyle = bg;
+                ectx.fillRect(0, 0, ec.width, ec.height);
+
+                // Estrelinhas flutuantes
+                sparkles.forEach(s => {
+                    s.y -= s.speed;
+                    s.opacity = Math.abs(Math.sin(t / 60 + s.a));
+                    if (s.y < 0) s.y = ec.height;
+                    ectx.fillStyle = `rgba(255,200,200,${s.opacity})`;
+                    ectx.beginPath(); ectx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ectx.fill();
+                });
+
+                const cx = ec.width / 2;
+                const groundY = ec.height * 0.72;
+
+                // Sombra dos dois
+                ectx.fillStyle = "rgba(0,0,0,0.3)";
+                ectx.beginPath(); ectx.ellipse(cx, groundY + 42, 55, 14, 0, 0, Math.PI * 2); ectx.fill();
+
+                // Ursinho vermelho (jogador) - lado esquerdo, levemente inclinado para ela
+                drawHugBear(ectx, cx - 36, groundY - 82, "#ff5e5e", -0.12, t);
+                // Namorada - lado direito, levemente inclinada para ele
+                drawHugBear(ectx, cx + 10, groundY - 82, "#c0392b", 0.12, t, true);
+
+                // Coração pulsante acima deles
+                heartPulse = 1 + Math.sin(t / 20) * 0.15;
+                drawBigHeart(ectx, cx - 10, groundY - 160, heartPulse);
+
+                // Partículas de corações menores subindo
+                for (let i = 0; i < 5; i++) {
+                    let hx = cx - 60 + i * 30 + Math.sin(t / 30 + i) * 8;
+                    let hy = groundY - 180 - ((t * 1.2 + i * 40) % 120);
+                    let ha = 0.4 + 0.3 * Math.sin(t / 25 + i);
+                    ectx.fillStyle = `rgba(255,94,94,${ha})`;
+                    ectx.font = `${10 + i * 2}px serif`;
+                    ectx.textAlign = "center";
+                    ectx.fillText("♡", hx, hy);
+                }
+            }
+
+            function drawHugBear(c, x, y, color, tilt, t, isGF = false) {
+                c.save();
+                c.translate(x + 30, y + 40);
+                c.rotate(tilt);
+                c.translate(-30, -40);
+
+                // Orelhas
+                c.fillStyle = color;
+                c.beginPath();
+                c.arc(8, 2, 9, 0, Math.PI * 2);
+                c.arc(32, 2, 9, 0, Math.PI * 2);
+                c.fill();
+
+                // Corpo
+                c.beginPath(); c.roundRect(0, 0, 40, 42, 13); c.fill();
+
+                // Bracinho de abraço (por cima do parceiro)
+                c.fillStyle = color;
+                if (!isGF) {
+                    c.beginPath(); c.roundRect(34, 8, 22, 10, 5); c.fill(); // braço direito esticado
+                } else {
+                    c.beginPath(); c.roundRect(-16, 8, 22, 10, 5); c.fill(); // braço esquerdo esticado
+                }
+
+                // Focinho
+                c.fillStyle = "rgba(255,255,255,.8)";
+                c.beginPath(); c.ellipse(20, 28, 10, 7, 0, 0, Math.PI * 2); c.fill();
+                c.fillStyle = "#3d2b2b";
+                c.beginPath(); c.arc(20, 25, 3, 0, Math.PI * 2); c.fill();
+
+                // Olhos fechados com "~" (felizes)
+                c.strokeStyle = "#3d2b2b"; c.lineWidth = 2; c.lineCap = "round";
+                c.beginPath(); c.arc(12, 16, 4, Math.PI * 0.1, Math.PI * 0.9); c.stroke();
+                c.beginPath(); c.arc(28, 16, 4, Math.PI * 0.1, Math.PI * 0.9); c.stroke();
+
+                if (isGF) {
+                    // Laço da namorada
+                    c.fillStyle = "#ff5e5e";
+                    c.beginPath(); c.arc(36, 0, 5, 0, Math.PI * 2); c.fill();
+                    c.beginPath(); c.ellipse(36, 0, 9, 4, 0.5, 0, Math.PI * 2); c.fill();
+                }
+
+                c.restore();
+            }
+
+            function drawBigHeart(c, x, y, scale) {
+                c.save();
+                c.translate(x, y);
+                c.scale(scale, scale);
+                c.fillStyle = "#ff5e5e";
+                c.shadowBlur = 20; c.shadowColor = "#ff5e5e";
+                c.beginPath();
+                c.moveTo(0, -10);
+                c.bezierCurveTo(0, -30, 30, -30, 30, -10);
+                c.bezierCurveTo(30, 5, 0, 25, 0, 32);
+                c.bezierCurveTo(0, 25, -30, 5, -30, -10);
+                c.bezierCurveTo(-30, -30, 0, -30, 0, -10);
+                c.fill();
+                c.shadowBlur = 0;
+                c.restore();
+            }
+
+            let frame = 0;
+            let hugInterval = setInterval(() => {
+                drawHugScene(frame++);
+                if (frame > 220) {
+                    clearInterval(hugInterval);
+                    // Iniciar créditos
+                    setTimeout(() => {
+                        endScreen.classList.remove("active");
+                        startCredits();
+                    }, 600);
+                }
+            }, 16);
+        }
+
+        function startCredits() {
+            document.getElementById("credits").classList.add("active");
+            setTimeout(() => {
+                document.getElementById("credits").classList.remove("active");
+                document.getElementById("final-message").classList.add("active");
+            }, 19000);
+        }
+
+        // ══════════════════════════════════════════════
+        //  DRAW BEAR (igual às fases anteriores)
+        // ══════════════════════════════════════════════
+        function drawBear(x, y, color, isMoving = false, forcedSide = null, activity = "idle") {
+            let jumpCycle = activity === "jump" ? Math.abs(Math.sin(Date.now() / 200)) * 14 : 0;
+            let drawY = y - jumpCycle;
+            let bodyWidth = isMoving ? 34 : 40;
+            let drawX = isMoving ? x + (40 - bodyWidth) / 2 : x;
+
+            let side = 0;
+            if (forcedSide !== null) side = forcedSide;
+            else if (isMoving) side = controls.left ? -1 : (controls.right ? 1 : 0);
+
+            let isLookingSide = side !== 0;
+            let faceOffset = isLookingSide ? 8 * side : 0;
+
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.beginPath(); ctx.ellipse(x + 20, y + 40, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(drawX + (isLookingSide ? (side === -1 ? 10 : 8) : 8), drawY + 2, 8, 0, Math.PI * 2);
+            ctx.arc(drawX + (isLookingSide ? (side === -1 ? 24 : 32) : 32), drawY + 2, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath(); ctx.roundRect(drawX, drawY, bodyWidth, 40, 12); ctx.fill();
+
+            ctx.fillStyle = "rgba(255,255,255,.8)";
+            ctx.beginPath(); ctx.ellipse(drawX + (bodyWidth / 2) + faceOffset, drawY + 28, isLookingSide ? 7 : 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#3d2b2b";
+            ctx.beginPath(); ctx.arc(drawX + (bodyWidth / 2) + (isLookingSide ? faceOffset * 1.2 : 0), drawY + 25, 3, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = "black";
+            if (isLookingSide) {
+                ctx.beginPath(); ctx.arc(drawX + (bodyWidth / 2) + faceOffset + (2 * side), drawY + 18, 3, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(drawX + 12, drawY + 18, 3, 0, Math.PI * 2);
+                ctx.arc(drawX + 28, drawY + 18, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = color;
+            if (isMoving) {
+                let ls = Math.sin(Date.now() / 100) * 6;
+                ctx.beginPath(); ctx.arc(drawX + 10 + ls, drawY + 40, 6, 0, Math.PI * 2); ctx.arc(drawX + 24 - ls, drawY + 40, 6, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(drawX + 8, drawY + 40, 7, 0, Math.PI * 2); ctx.arc(drawX + 32, drawY + 40, 7, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        function drawGFBear(x, y) {
+            // Namorada: ursa vinho/vermelho com laço
+            drawBear(x, y, "#c0392b", false, 1);
+            // Laço por cima
+            ctx.fillStyle = "#ff5e5e";
+            ctx.beginPath(); ctx.arc(x + 38, y + 2, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(x + 38, y + 2, 9, 4, 0.5, 0, Math.PI * 2); ctx.fill();
+            // Corações nos olhos quando player perto
+            if (!talkingGF) return;
+            ctx.fillStyle = "#3d2b2b";
+            ctx.font = "9px serif"; ctx.textAlign = "center";
+        }
+
+        // ══════════════════════════════════════════════
+        //  DRAW: CENÁRIO EXTERNO (rua real)
+        // ══════════════════════════════════════════════
+        function drawExterior() {
+            const fY = mapExt.floorY;
+
+            // ── Céu
+            let sky = ctx.createLinearGradient(0, 0, 0, fY - 80);
+            sky.addColorStop(0, "#87ceeb"); sky.addColorStop(1, "#c9eaf5");
+            ctx.fillStyle = sky; ctx.fillRect(-200, 0, mapExt.width + 400, fY - 80);
+
+            // Nuvens
+            [[120, 55], [380, 40], [700, 65], [1100, 45], [1600, 60], [2200, 50]].forEach(([cx, cy]) => {
+                ctx.fillStyle = "rgba(255,255,255,.9)";
+                ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+                ctx.arc(cx + 28, cy - 12, 28, 0, Math.PI * 2);
+                ctx.arc(cx + 56, cy, 22, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // ── Chão de terra / areia (estilo foto)
+            ctx.fillStyle = "#c4b89a"; // cor areia clara
+            ctx.fillRect(-200, fY - 85, mapExt.width + 400, 120);
+
+            // Calçada cimentada
+            ctx.fillStyle = "#d6cfc4";
+            ctx.fillRect(-200, fY - 10, mapExt.width + 400, 40);
+            // Rachado / textura
+            ctx.strokeStyle = "rgba(0,0,0,.07)"; ctx.lineWidth = 1;
+            for (let tx = 0; tx < mapExt.width; tx += 120) {
+                ctx.beginPath(); ctx.moveTo(tx, fY - 10); ctx.lineTo(tx, fY + 30); ctx.stroke();
+            }
+
+            // ── MURO DE TIJOLO (lado esquerdo, referência às fotos) ──────────────
+            // Muro principal — estende-se do início até o gateway
+            const wallH = 110;
+            const wallTopY = fY - 85 - wallH;
+
+            // Fundo do muro (concreto/argamassa)
+            ctx.fillStyle = "#b0a89a";
+            ctx.fillRect(-200, wallTopY, GATEWAY_X + 200, wallH);
+
+            // Tijolos desenhados
+            const bw = 38, bh = 16;
+            for (let row = 0; row < Math.ceil(wallH / bh); row++) {
+                let offset = (row % 2 === 0) ? 0 : bw / 2;
+                for (let col = -1; col < Math.ceil((GATEWAY_X + 200) / bw) + 1; col++) {
+                    let bx = col * bw + offset - 200;
+                    let by = wallTopY + row * bh;
+                    ctx.fillStyle = (row + col) % 3 === 0 ? "#a0522d" : (row + col) % 3 === 1 ? "#8b4513" : "#9e4a2a";
+                    ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
+                    ctx.strokeStyle = "rgba(0,0,0,.18)"; ctx.lineWidth = .5;
+                    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+                }
+            }
+
+            // Topo do muro (reboco)
+            ctx.fillStyle = "#c8c0b5";
+            ctx.fillRect(-200, wallTopY - 8, GATEWAY_X + 200, 10);
+
+            // Plantas/vegetação saindo pelo muro (como nas fotos)
+            [[80, wallTopY], [200, wallTopY - 5], [350, wallTopY - 8], [550, wallTopY], [700, wallTopY - 6]].forEach(([tx, ty]) => {
+                ctx.fillStyle = "#2d8a3e";
+                ctx.beginPath(); ctx.arc(tx, ty, 18, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#34a853";
+                ctx.beginPath(); ctx.arc(tx + 8, ty - 8, 12, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#27ae60";
+                ctx.beginPath(); ctx.arc(tx - 5, ty - 12, 10, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // Palmeiras atrás do muro
+            [[180, wallTopY - 30], [500, wallTopY - 40], [750, wallTopY - 20]].forEach(([tx, ty]) => {
+                ctx.fillStyle = "#6F4E37";
+                ctx.fillRect(tx - 4, ty, 8, 35);
+                ctx.fillStyle = "#27ae60";
+                ctx.beginPath(); ctx.arc(tx, ty, 20, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // ── POSTE CONCRETO (referência fotos: postes cinza verticais)
+            [55, GATEWAY_X - 10].forEach(px => {
+                ctx.fillStyle = "#9e9e9e";
+                ctx.fillRect(px - 6, wallTopY - 60, 12, wallH + 65);
+                ctx.fillStyle = "#bdbdbd";
+                ctx.fillRect(px - 5, wallTopY - 60, 4, wallH + 65);
+            });
+
+            // ── GATEWAY / ENTRADA DO CAMINHO (centro, como nas fotos)
+            {
+                const gx = GATEWAY_X;
+                // Portão de concreto — duas colunas
+                ctx.fillStyle = "#8d8d8d";
+                ctx.fillRect(gx - 10, wallTopY - 50, 18, wallH + 55);
+                ctx.fillRect(gx + 90, wallTopY - 50, 18, wallH + 55);
+                // Faixa topo
+                ctx.fillStyle = "#757575";
+                ctx.fillRect(gx - 10, wallTopY - 50, 118, 14);
+
+                // Chão do caminho (terra batida mais clara, como nas fotos)
+                ctx.fillStyle = "#c8b89a";
+                ctx.fillRect(gx + 8, fY - 200, 92, 200);
+                // Sombra nas bordas do caminho
+                ctx.fillStyle = "rgba(0,0,0,.12)";
+                ctx.fillRect(gx + 8, fY - 200, 8, 200);
+                ctx.fillRect(gx + 92, fY - 200, 8, 200);
+
+                // Indicador piscante
+                if (Math.sin(Date.now() / 200) > 0) {
+                    ctx.fillStyle = "#ff5e5e";
+                    ctx.font = "bold 13px Comic Sans MS"; ctx.textAlign = "center";
+                    ctx.fillText("➡ ENTRAR", gx + 54, wallTopY - 58);
+                }
+            }
+
+            // ── CONTINUAÇÃO DA RUA APÓS O GATEWAY ──────────────────────
+            // Muro curto do lado direito
+            const wallR2Start = GATEWAY_X + 108;
+            ctx.fillStyle = "#b0a89a";
+            ctx.fillRect(wallR2Start, wallTopY + 20, 400, wallH - 20);
+            // Tijolos lado direito
+            for (let row = 0; row < Math.ceil((wallH - 20) / bh); row++) {
+                let offset = (row % 2 === 0) ? 0 : bw / 2;
+                for (let col = 0; col < Math.ceil(400 / bw) + 1; col++) {
+                    let bx = wallR2Start + col * bw + offset;
+                    let by = wallTopY + 20 + row * bh;
+                    ctx.fillStyle = (row + col) % 3 === 0 ? "#a0522d" : (row + col) % 3 === 1 ? "#8b4513" : "#9e4a2a";
+                    ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
+                    ctx.strokeStyle = "rgba(0,0,0,.18)"; ctx.lineWidth = .5;
+                    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+                }
+            }
+
+            // Árvores grandes fundo (referência foto 2)
+            [[950, fY - 180], [1100, fY - 200], [1250, fY - 170], [1500, fY - 190], [1800, fY - 180], [2200, fY - 200], [2500, fY - 180]].forEach(([tx, ty]) => {
+                ctx.fillStyle = "#5a8a3e";
+                ctx.beginPath(); ctx.arc(tx, ty, 38, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#6d9e50";
+                ctx.beginPath(); ctx.arc(tx + 10, ty - 15, 25, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#4a7a30";
+                ctx.beginPath(); ctx.arc(tx - 8, ty - 20, 20, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#6F4E37";
+                ctx.fillRect(tx - 5, ty + 10, 10, 50);
+            });
+
+            // ── CARROS estacionados ao fundo (referência foto 2)
+            [{ x: 990, c: "#ddd" }, { x: 1070, c: "#c0392b" }, { x: 1150, c: "#3498db" }].forEach(({ x, c }) => {
+                ctx.fillStyle = c;
+                ctx.beginPath(); ctx.roundRect(x, fY - 105, 70, 38, 6); ctx.fill();
+                ctx.fillStyle = "#555";
+                ctx.beginPath(); ctx.roundRect(x + 10, fY - 120, 50, 20, [5, 5, 0, 0]); ctx.fill();
+                ctx.fillStyle = "rgba(150,220,255,.5)";
+                ctx.beginPath(); ctx.roundRect(x + 12, fY - 117, 46, 15, 3); ctx.fill();
+                ctx.fillStyle = "#111";
+                ctx.beginPath(); ctx.arc(x + 14, fY - 67, 9, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + 56, fY - 67, 9, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // ── CASA (lá no fundo, simplificada) ─────────────────────────
+            {
+                const hx = HOUSE_DOOR_X - 100;
+                // Corpo da casa: concreto bege/cinza (como nas fotos)
+                ctx.fillStyle = "#c8c2b8";
+                ctx.fillRect(hx, fY - 185, 280, 155);
+                // Telhado cerâmica laranja
+                ctx.fillStyle = "#c0703a";
+                ctx.fillRect(hx - 15, fY - 210, 310, 30);
+                ctx.fillStyle = "#d4804a";
+                for (let tx = hx - 15; tx < hx + 295; tx += 20) {
+                    ctx.beginPath(); ctx.arc(tx + 10, fY - 195, 10, 0, Math.PI); ctx.fill();
+                }
+                // Janelas
+                ctx.fillStyle = "#8dd3e8";
+                ctx.fillRect(hx + 20, fY - 165, 60, 55);
+                ctx.fillRect(hx + 180, fY - 165, 60, 55);
+                ctx.strokeStyle = "#888"; ctx.lineWidth = 2;
+                ctx.strokeRect(hx + 20, fY - 165, 60, 55);
+                ctx.strokeRect(hx + 180, fY - 165, 60, 55);
+                // Janela divisória
+                ctx.beginPath(); ctx.moveTo(hx + 50, fY - 165); ctx.lineTo(hx + 50, fY - 110); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(hx + 210, fY - 165); ctx.lineTo(hx + 210, fY - 110); ctx.stroke();
+                // Porta
+                ctx.fillStyle = "#6F4E37";
+                ctx.beginPath(); ctx.roundRect(hx + 110, fY - 155, 60, 125, [4, 4, 0, 0]); ctx.fill();
+                ctx.fillStyle = "rgba(150,220,255,.3)";
+                ctx.beginPath(); ctx.roundRect(hx + 115, fY - 148, 50, 60, 3); ctx.fill();
+                ctx.fillStyle = "#f39c12";
+                ctx.beginPath(); ctx.arc(hx + 163, fY - 80, 4, 0, Math.PI * 2); ctx.fill();
+
+                // Entrada: seta piscante se player próximo
+                if (player.x > HOUSE_DOOR_X - 200 && Math.sin(Date.now() / 200) > 0) {
+                    ctx.fillStyle = "#2ecc71";
+                    ctx.font = "bold 13px Comic Sans MS"; ctx.textAlign = "center";
+                    ctx.fillText("🚪 ENTRAR", hx + 140, fY - 220);
+                }
+            }
+
+            // Barracão / edifício cinza à direita (foto 2)
+            ctx.fillStyle = "#7f7f7f";
+            ctx.fillRect(mapExt.width - 300, fY - 160, 280, 130);
+            ctx.fillStyle = "#555";
+            ctx.fillRect(mapExt.width - 310, fY - 168, 300, 15);
+
+            // ── POSTES de energia
+            [400, 900, 1700, 2400].forEach(px => {
+                ctx.strokeStyle = "#555"; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.moveTo(px, fY - 5); ctx.lineTo(px, fY - 120); ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(px - 18, fY - 120); ctx.lineTo(px + 18, fY - 120); ctx.stroke();
+                // Fio
+                ctx.strokeStyle = "rgba(60,60,60,.5)"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(px + 18, fY - 120); ctx.lineTo(px + 418, fY - 112); ctx.stroke();
+            });
+        }
+
+        // ══════════════════════════════════════════════
+        //  DRAW: INTERIOR DA CASA (sala de estar)
+        // ══════════════════════════════════════════════
+        function drawInterior() {
+            const fY = mapInt.floorY;
+            const W = mapInt.width;
+
+            // ── Paredes bege
+            ctx.fillStyle = "#e8dcc8";
+            ctx.fillRect(-100, 0, W + 200, fY + 50);
+
+            // Rodapé
+            ctx.fillStyle = "#c8b89a";
+            ctx.fillRect(-100, fY - 18, W + 200, 20);
+
+            // Piso: madeira clara
+            let floor = ctx.createLinearGradient(0, fY - 18, 0, fY + 5);
+            floor.addColorStop(0, "#d4a66a"); floor.addColorStop(1, "#c4925a");
+            ctx.fillStyle = floor;
+            ctx.fillRect(-100, fY - 18, W + 200, 36);
+            // Tábuas do piso
+            ctx.strokeStyle = "rgba(0,0,0,.12)"; ctx.lineWidth = 1;
+            for (let fx = 0; fx < W; fx += 80) {
+                ctx.beginPath(); ctx.moveTo(fx, fY - 18); ctx.lineTo(fx, fY + 20); ctx.stroke();
+            }
+
+            // ── PAREDE DO FUNDO (mais escura, perspectiva)
+            ctx.fillStyle = "#ddd0bc";
+            ctx.fillRect(-100, 40, W + 200, fY - 140);
+
+            // Linha de perspectiva (rodapé da parede)
+            ctx.fillStyle = "#c8b89a";
+            ctx.fillRect(-100, fY - 140, W + 200, 8);
+
+            // ── JANELA (parede lateral esquerda)
+            {
+                ctx.fillStyle = "#87ceeb";
+                ctx.fillRect(50, 80, 90, 120);
+                ctx.fillStyle = "rgba(255,255,255,.4)";
+                ctx.fillRect(50, 80, 90, 120);
+                ctx.strokeStyle = "#888"; ctx.lineWidth = 4;
+                ctx.strokeRect(50, 80, 90, 120);
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(95, 80); ctx.lineTo(95, 200); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(50, 140); ctx.lineTo(140, 140); ctx.stroke();
+                // Cortina
+                ctx.fillStyle = "rgba(255,220,220,.7)";
+                ctx.fillRect(44, 75, 20, 135); ctx.fillRect(130, 75, 20, 135);
+                // Vasos na janela
+                ctx.fillStyle = "#c0703a";
+                ctx.beginPath(); ctx.roundRect(58, 195, 18, 12, 2); ctx.fill();
+                ctx.fillStyle = "#27ae60";
+                ctx.beginPath(); ctx.arc(67, 192, 8, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // ── MESA DE MÁRMORE COM PANO BRANCO (centro-esquerda)
+            {
+                const tx = 180, ty = fY - 140;
+                // Tampo — mármore
+                ctx.fillStyle = "#e0e0e0";
+                ctx.beginPath(); ctx.roundRect(tx, ty - 12, 220, 16, 4); ctx.fill();
+                ctx.strokeStyle = "#ccc"; ctx.lineWidth = 1;
+                for (let mx = tx; mx < tx + 220; mx += 30) {
+                    ctx.beginPath(); ctx.moveTo(mx, ty - 12); ctx.lineTo(mx + 20, ty + 4); ctx.stroke();
+                }
+                // Pano branco
+                ctx.fillStyle = "rgba(255,255,255,.92)";
+                ctx.beginPath(); ctx.roundRect(tx - 5, ty - 10, 230, 18, 3); ctx.fill();
+                ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1;
+                ctx.strokeRect(tx - 5, ty - 10, 230, 18);
+                // Pernas da mesa
+                ctx.fillStyle = "#8d6e4a";
+                [[tx + 15, ty + 4], [tx + 195, ty + 4]].forEach(([lx, ly]) => {
+                    ctx.fillRect(lx, ly, 12, fY - ty - 4);
+                });
+                // 4 cadeiras — duas na frente, duas atrás (simplificado)
+                const chairs = [
+                    { x: tx - 30, y: ty - 5, side: -1 }, { x: tx + 210, y: ty - 5, side: 1 },
+                    { x: tx + 30, y: ty + 20, side: 0 }, { x: tx + 140, y: ty + 20, side: 0 }
+                ];
+                chairs.forEach(({ x, y, side }) => {
+                    ctx.fillStyle = "#6F4E37";
+                    ctx.beginPath(); ctx.roundRect(x, y, 40, 10, 3); ctx.fill();
+                    // Pernas
+                    ctx.fillRect(x + 4, y + 10, 6, 26); ctx.fillRect(x + 30, y + 10, 6, 26);
+                    // Encosto
+                    if (side === 0) {
+                        ctx.fillRect(x + 4, y - 20, 6, 20); ctx.fillRect(x + 30, y - 20, 6, 20);
+                        ctx.fillRect(x + 4, y - 22, 32, 5);
+                    }
+                });
+
+                // Xícara decorativa sobre a mesa
+                ctx.fillStyle = "#fff";
+                ctx.beginPath(); ctx.roundRect(tx + 90, ty - 22, 22, 12, 3); ctx.fill();
+                ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1; ctx.strokeRect(tx + 90, ty - 22, 22, 12);
+                ctx.strokeStyle = "#aaa"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.arc(tx + 112, ty - 16, 6, 0, Math.PI); ctx.stroke();
+            }
+
+            // ── PAREDE DO FUNDO: TV + RACK + DECORAÇÕES ─────────────────
+            {
+                const backWallY = 40;
+                const backWallH = fY - 148;
+
+                // RACK
+                ctx.fillStyle = "#5d4037";
+                ctx.fillRect(330, backWallH - 30, 400, 32);
+                ctx.fillStyle = "#4e342e";
+                ctx.fillRect(335, backWallH + 2, 390, 8);
+                // Pernas do rack
+                ctx.fillStyle = "#4e342e";
+                [340, 380, 430, 500, 560, 700].forEach(lx => ctx.fillRect(lx, backWallH + 10, 12, 28));
+
+                // TV sobre o rack
+                ctx.fillStyle = "#111";
+                ctx.beginPath(); ctx.roundRect(360, backWallH - 130, 340, 100, 6); ctx.fill();
+                // Tela
+                let tvGrad = ctx.createLinearGradient(365, backWallH - 125, 365, backWallH - 35);
+                tvGrad.addColorStop(0, "#1a1a2e"); tvGrad.addColorStop(1, "#16213e");
+                ctx.fillStyle = tvGrad;
+                ctx.fillRect(365, backWallH - 125, 330, 90);
+                // Reflexo na tela
+                ctx.fillStyle = "rgba(255,255,255,.04)";
+                ctx.beginPath(); ctx.moveTo(365, backWallH - 125); ctx.lineTo(695, backWallH - 125); ctx.lineTo(580, backWallH - 70); ctx.lineTo(365, backWallH - 70); ctx.closePath(); ctx.fill();
+                // Pé da TV
+                ctx.fillStyle = "#333";
+                ctx.fillRect(510, backWallH - 31, 40, 6);
+
+                // IMAGENS DE NOSSA SENHORA (parede, ao lado esquerdo da TV)
+                // Quadro 1
+                ctx.fillStyle = "#8d6e4a";
+                ctx.beginPath(); ctx.roundRect(200, backWallH - 160, 60, 75, 3); ctx.fill();
+                ctx.fillStyle = "#f5e6c8";
+                ctx.fillRect(205, backWallH - 155, 50, 65);
+                // Figura estilizada
+                ctx.fillStyle = "#c0703a"; ctx.beginPath(); ctx.arc(230, backWallH - 128, 12, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#1565c0"; ctx.beginPath(); ctx.roundRect(218, backWallH - 116, 24, 30, 5); ctx.fill();
+                ctx.fillStyle = "#f9ca24";
+                ctx.beginPath(); ctx.arc(230, backWallH - 140, 6, 0, Math.PI * 2); ctx.fill(); // auréola
+                ctx.strokeStyle = "#f9ca24"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.arc(230, backWallH - 140, 9, 0, Math.PI * 2); ctx.stroke();
+                // Texto pequeno
+                ctx.fillStyle = "#555"; ctx.font = "6px Arial"; ctx.textAlign = "center";
+                ctx.fillText("N.Sra", 230, backWallH - 95);
+
+                // Quadro 2
+                ctx.fillStyle = "#8d6e4a";
+                ctx.beginPath(); ctx.roundRect(270, backWallH - 150, 55, 70, 3); ctx.fill();
+                ctx.fillStyle = "#f5e6c8"; ctx.fillRect(275, backWallH - 145, 45, 60);
+                ctx.fillStyle = "#b5179e"; ctx.beginPath(); ctx.arc(297, backWallH - 120, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#4a0e8f"; ctx.beginPath(); ctx.roundRect(287, backWallH - 110, 20, 28, 4); ctx.fill();
+                ctx.fillStyle = "#f9ca24";
+                ctx.beginPath(); ctx.arc(297, backWallH - 130, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = "#f9ca24"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.arc(297, backWallH - 130, 8, 0, Math.PI * 2); ctx.stroke();
+
+                // DECORAÇÕES FLORAIS (vasos no rack, lateral esquerda)
+                [[340, backWallH - 45], [700, backWallH - 45], [760, backWallH - 42]].forEach(([fx, fy]) => {
+                    ctx.fillStyle = "#8b6914";
+                    ctx.beginPath(); ctx.roundRect(fx - 8, fy - 4, 16, 18, 3); ctx.fill();
+                    ctx.fillStyle = "#e91e63";
+                    ctx.beginPath(); ctx.arc(fx, fy - 8, 8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = "#c2185b";
+                    ctx.beginPath(); ctx.arc(fx + 5, fy - 14, 6, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = "#27ae60";
+                    ctx.beginPath(); ctx.moveTo(fx, fy - 4); ctx.lineTo(fx - 6, fy - 16); ctx.lineWidth = 2; ctx.strokeStyle = "#27ae60"; ctx.stroke();
+                });
+
+                // REMÉDIOS no fundinho do rack (lado direito)
+                [[700, backWallH - 56], [720, backWallH - 52], [740, backWallH - 56]].forEach(([rx, ry], i) => {
+                    const rcolors = ["#e53935", "#1976d2", "#f57f17"];
+                    ctx.fillStyle = rcolors[i];
+                    ctx.beginPath(); ctx.roundRect(rx, ry, 14, 22, 2); ctx.fill();
+                    ctx.fillStyle = "rgba(255,255,255,.3)";
+                    ctx.fillRect(rx + 2, ry + 3, 10, 4);
+                });
+
+                // FOTO DE FAMÍLIA (moldura, parede direita ao lado da TV)
+                {
+                    const fx = 700, fy2 = backWallH - 165;
+                    ctx.fillStyle = "#8d6e4a";
+                    ctx.beginPath(); ctx.roundRect(fx, fy2, 130, 90, 4); ctx.fill();
+                    ctx.fillStyle = "#f9f0e0";
+                    ctx.fillRect(fx + 5, fy2 + 5, 120, 80);
+                    // Ursinhos da família: vermelho-vinho, amarelo, rosa idosa, verde idoso
+                    const famBears = [
+                        { x: fx + 18, y: fy2 + 30, c: "#7b1a1a", sc: 0.45 },  // ursinha vermelha vinho
+                        { x: fx + 50, y: fy2 + 28, c: "#f9ca24", sc: 0.45 },  // ursa amarela
+                        { x: fx + 78, y: fy2 + 35, c: "#e91e8c", sc: 0.4 },   // ursa idosa rosa
+                        { x: fx + 105, y: fy2 + 35, c: "#27ae60", sc: 0.4 },  // urso idoso verde
+                    ];
+                    famBears.forEach(({ x, y, c, sc }) => {
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.scale(sc, sc);
+                        // Orelhas
+                        ctx.fillStyle = c;
+                        ctx.beginPath(); ctx.arc(8, 2, 8, 0, Math.PI * 2); ctx.arc(32, 2, 8, 0, Math.PI * 2); ctx.fill();
+                        // Corpo
+                        ctx.beginPath(); ctx.roundRect(0, 0, 40, 36, 10); ctx.fill();
+                        // Focinho
+                        ctx.fillStyle = "rgba(255,255,255,.8)";
+                        ctx.beginPath(); ctx.ellipse(20, 26, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = "#3d2b2b";
+                        ctx.beginPath(); ctx.arc(20, 23, 3, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = "black";
+                        ctx.beginPath(); ctx.arc(12, 14, 3, 0, Math.PI * 2); ctx.arc(28, 14, 3, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    });
+                    // Legenda da foto
+                    ctx.fillStyle = "#666"; ctx.font = "6px Arial"; ctx.textAlign = "center";
+                    ctx.fillText("Família ♡", fx + 65, fy2 + 88);
+                }
+
+                // IMPRESSORA na prateleira (parede ao lado da TV)
+                {
+                    const px2 = 730, py2 = backWallH - 220;
+                    // Prateleira
+                    ctx.fillStyle = "#5d4037";
+                    ctx.fillRect(700, backWallH - 195, 160, 8);
+                    ctx.fillStyle = "#4e342e";
+                    ctx.fillRect(710, backWallH - 187, 8, 25); ctx.fillRect(840, backWallH - 187, 8, 25);
+                    // Impressora
+                    ctx.fillStyle = "#e0e0e0";
+                    ctx.beginPath(); ctx.roundRect(px2, py2, 100, 42, 5); ctx.fill();
+                    ctx.fillStyle = "#bdbdbd";
+                    ctx.fillRect(px2 + 5, py2 + 5, 90, 8);
+                    // Slot papel
+                    ctx.fillStyle = "#999";
+                    ctx.fillRect(px2 + 20, py2 + 38, 60, 4);
+                    // Botão
+                    ctx.fillStyle = "#2196f3";
+                    ctx.beginPath(); ctx.arc(px2 + 88, py2 + 14, 5, 0, Math.PI * 2); ctx.fill();
+                }
+
+                // PORTA DE ENTRADA DA CASA (esquerda)
+                ctx.fillStyle = "#6F4E37";
+                ctx.beginPath(); ctx.roundRect(0, backWallH - 110, 60, fY - backWallH + 72, [4, 4, 0, 0]); ctx.fill();
+                ctx.fillStyle = "rgba(150,220,255,.25)";
+                ctx.fillRect(5, backWallH - 100, 50, 55);
+                ctx.fillStyle = "#f39c12";
+                ctx.beginPath(); ctx.arc(54, backWallH - 55, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "white"; ctx.font = "9px Arial"; ctx.textAlign = "center";
+                ctx.fillText("← saída", 30, backWallH - 112);
+            }
+
+            // ── NPC: NAMORADA ─────────────────────────────────────────────
+            {
+                const gfY = mapInt.floorY;
+                drawGFBear(GF_X, gfY - player.h);
+
+                // Balão indicador
+                if (!talkingGF && Math.sin(Date.now() / 200) > 0) {
+                    ctx.fillStyle = "#ff5e5e";
+                    ctx.font = "bold 12px Comic Sans MS"; ctx.textAlign = "center";
+                    ctx.fillText("💬 Falar", GF_X + 20, gfY - player.h - 18);
+                }
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  DRAW HUD
+        // ══════════════════════════════════════════════
+        function drawHUD() {
+            // Inventário 4 slots
+            ctx.fillStyle = "rgba(0,0,0,.7)";
+            ctx.beginPath(); ctx.roundRect(8, 8, 300, 58, 8); ctx.fill();
+            ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.textAlign = "left";
+            ctx.fillText("INVENTÁRIO", 18, 22);
+
+            const slots = [
+                { key: "lirio", icon: "🌸", label: "Lírio" },
+                { key: "sorvete", icon: "🍦", label: "Sorvete" },
+                { key: "pelucia", icon: "🦊", label: "Pelúcia" },
+                { key: "_", icon: "—", label: "" },
+            ];
+            slots.forEach(({ key, icon }, i) => {
+                let sx = 18 + i * 70, sy = 26;
+                let has = key !== "__" && inventory[key];
+                ctx.fillStyle = has ? "rgba(40,180,40,.4)" : "rgba(255,255,255,.1)";
+                ctx.beginPath(); ctx.roundRect(sx, sy, 62, 32, 5); ctx.fill();
+                ctx.strokeStyle = has ? "#2ecc71" : "rgba(255,255,255,.3)"; ctx.lineWidth = 1.5;
+                ctx.strokeRect(sx, sy, 62, 32);
+                ctx.font = has ? "18px serif" : "13px Arial"; ctx.textAlign = "center";
+                ctx.fillStyle = has ? "white" : "rgba(255,255,255,.3)";
+                ctx.fillText(has ? icon : "—", sx + 31, sy + 21);
+            });
+
+            // Fase label
+            ctx.fillStyle = "rgba(0,0,0,.55)";
+            ctx.beginPath(); ctx.roundRect(8, 72, 160, 26, 6); ctx.fill();
+            ctx.fillStyle = "#ff5e5e"; ctx.font = "bold 10px Arial"; ctx.textAlign = "left";
+            ctx.fillText(inHouse ? "🏠 Dentro da casa" : "🌳 Rua - Av. Manoel Mavignier", 18, 88);
+
+            if (isPaused) {
+                ctx.fillStyle = "rgba(0,0,0,.5)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "white"; ctx.font = "bold 30px Arial"; ctx.textAlign = "center";
+                ctx.fillText("PAUSE", canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  LOOP PRINCIPAL
+        // ══════════════════════════════════════════════
+        function draw() {
+            // Limpa a tela antes de redesenhar
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+
+            // MOVE O CENÁRIO EM AMBOS OS EIXOS (X e Y) ACOMPANHANDO O URSINHO
+            ctx.translate(-camX, -camY);
+
+            // Desenha o cenário de fundo correto
+            if (inHouse) {
+                drawInterior();
+            } else {
+                drawExterior();
+            }
+
+            // Desenha o ursinho acompanhando a translação da câmera
+            let isMoving = controls.left || controls.right;
+            drawBear(player.x, player.y, "#ff5e5e", isMoving);
+
+            ctx.restore(); // Restaura o contexto para travar o HUD na tela do jogador
+
+            // O HUD e menus são desenhados por último e ficam estáticos na tela
+            drawHUD();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+
+</html>
