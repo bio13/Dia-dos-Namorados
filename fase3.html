@@ -292,90 +292,108 @@
         <p>Quase lá, ursinho...</p>
     </div>
 
-    <div class="console-body relative w-[95vw] h-[88dvh] rounded-[3rem] shadow-2xl flex flex-col border-b-8 border-black/40 overflow-hidden">
-    
-    <!-- TÍTULO -->
-    <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest z-10">
-        My Little Love Story – Fase 3
-    </div>
+    <div
+        class="console-body relative w-[95vw] h-[88dvh] rounded-[3rem] shadow-2xl flex flex-col border-b-8 border-black/40 overflow-hidden">
 
-    <div class="flex flex-1 items-center justify-between gap-4 p-4">
-
-        <!-- D-PAD -->
-        <div class="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
-            <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▲</button>
-            <button id="left" class="absolute left-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">◀</button>
-            <button id="right" class="absolute right-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">▶</button>
-            <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▼</button>
-            <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
+        <!-- TÍTULO -->
+        <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest z-10">
+            My Little Love Story – Fase 3
         </div>
 
-        <!-- TELA DO JOGO -->
-        <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-xl overflow-hidden shadow-inner" id="game-wrap">
-            <canvas id="game"></canvas>
+        <div class="flex flex-1 items-center justify-between gap-4 p-4">
 
-            <!-- NOTIFICAÇÃO -->
-            <div id="notif" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-[88%] bg-black/80 text-white p-3 rounded text-sm z-20 text-center"></div>
+            <!-- D-PAD -->
+            <div class="relative w-32 h-32 flex-shrink-0 flex items-center justify-center">
+                <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed"
+                    disabled>▲</button>
+                <button id="left" class="absolute left-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">◀</button>
+                <button id="right" class="absolute right-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">▶</button>
+                <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed"
+                    disabled>▼</button>
+                <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
+            </div>
 
-            <!-- MODAL DIÁLOGO -->
-            <div id="dialog-modal">
-                <div class="dialog-box">
-                    <canvas id="dialog-portrait" width="80" height="80" style="border-radius:50%;border:3px solid #ff5e5e;margin:0 auto 12px;display:block;"></canvas>
-                    <div class="dialog-speaker" id="d-speaker"></div>
-                    <div class="dialog-text" id="d-text"></div>
-                    <div class="dialog-options" id="d-options"></div>
+            <!-- TELA DO JOGO -->
+            <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-xl overflow-hidden shadow-inner"
+                id="game-wrap">
+                <canvas id="game"></canvas>
+
+                <!-- NOTIFICAÇÃO -->
+                <div id="notif"
+                    class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-[88%] bg-black/80 text-white p-3 rounded text-sm z-20 text-center">
+                </div>
+
+                <!-- MODAL DIÁLOGO -->
+                <div id="dialog-modal">
+                    <div class="dialog-box">
+                        <canvas id="dialog-portrait" width="80" height="80"
+                            style="border-radius:50%;border:3px solid #ff5e5e;margin:0 auto 12px;display:block;"></canvas>
+                        <div class="dialog-speaker" id="d-speaker"></div>
+                        <div class="dialog-text" id="d-text"></div>
+                        <div class="dialog-options" id="d-options"></div>
+                    </div>
+                </div>
+
+                <!-- CENA FINAL -->
+                <div id="ending-screen" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                    <canvas id="ending-canvas"></canvas>
+                </div>
+
+                <!-- CRÉDITOS -->
+                <div id="credits" class="hidden absolute inset-0 bg-black overflow-hidden">
+                    <div id="credits-inner">
+                        <p class="small" style="opacity:.4;font-size:.75rem;">♡ Bears Love Story ♡</p>
+                        <br /><br />
+                        <h2>Fim</h2>
+                        <br />
+                        <p>Uma história de amor fofa em forma de jogo.</p>
+                        <br />
+                        <p class="small">🌸 Lírio do vale entregue com carinho</p>
+                        <p class="small">🍦 Sorvete para adoçar o encontro</p>
+                        <p class="small">🦊 Pelúcia de raposa para nunca esquecer</p>
+                        <br /><br />
+                        <p>Criado com amor ♡</p>
+                        <br /><br />
+                        <div class="heart">♡</div>
+                    </div>
+                </div>
+
+                <!-- MENSAGEM FINAL -->
+                <div id="final-message" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                    <p>“Para tudo o que você quiser ou precisar, eu estarei aqui por ti.<br>
+                        Não importa a distância, o tempo ou as circunstâncias, pois o amor que tenho por ti vai além
+                        deste espaço.<br>
+                        Comigo, peço que seja sempre você mesma; quero ver-te exatamente como és. Quero ver tua luz, ó
+                        lua.”</p>
+                    <p>Isso te lembra algo? <a
+                            href="https://www.youtube.com/watch?v=30fbS1x0i5M&list=RD30fbS1x0i5M&start_radio=1">Ouça a
+                            música</a></p>
                 </div>
             </div>
 
-            <!-- CENA FINAL -->
-            <div id="ending-screen" class="hidden absolute inset-0 bg-black flex items-center justify-center">
-                <canvas id="ending-canvas"></canvas>
-            </div>
-
-            <!-- CRÉDITOS -->
-            <div id="credits" class="hidden absolute inset-0 bg-black overflow-hidden">
-                <div id="credits-inner">
-                    <p class="small" style="opacity:.4;font-size:.75rem;">♡ Bears Love Story ♡</p>
-                    <br /><br />
-                    <h2>Fim</h2>
-                    <br />
-                    <p>Uma história de amor<br />sobre coragem, distância<br />e um ursinho teimoso.</p>
-                    <br />
-                    <p class="small">🌸 Lírio do vale entregue com carinho</p>
-                    <p class="small">🍦 Sorvete para adoçar o encontro</p>
-                    <p class="small">🦊 Pelúcia de raposa para nunca esquecer</p>
-                    <br /><br />
-                    <p>Criado com amor ♡</p>
-                    <br /><br />
-                    <div class="heart">♡</div>
-                </div>
-            </div>
-
-            <!-- MENSAGEM FINAL -->
-            <div id="final-message" class="hidden absolute inset-0 bg-black flex items-center justify-center">
-                <p>Sofia, eu te amo mil milhões. Conhecer você foi uma das maiores alegrias que já tive, minha raposinha. Obrigado por tudo.</p>
+            <!-- BOTÃO AÇÃO -->
+            <div class="w-32 flex justify-center flex-shrink-0">
+                <button id="action" class="btn-red w-24 h-24 rounded-full shadow-xl flex items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-white/30 rounded-full"></div>
+                </button>
             </div>
         </div>
 
-        <!-- BOTÃO AÇÃO -->
-        <div class="w-32 flex justify-center flex-shrink-0">
-            <button id="action" class="btn-red w-24 h-24 rounded-full shadow-xl flex items-center justify-center">
-                <div class="w-16 h-16 border-4 border-white/30 rounded-full"></div>
-            </button>
+        <div class="flex items-end justify-between mt-auto px-8 pb-4 text-white text-[10px]">
+            <div class="leading-tight">
+                <span class="font-bold">Fase 3 – Missão:</span><br>
+                Chegue até a casa dela pelo caminho central e converse com a sua namorada ❤️
+            </div>
+            <div class="flex gap-4">
+                <button id="pauseBtn"
+                    class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Pause <span
+                        class="text-xs">II</span></button>
+                <button id="playBtn"
+                    class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Play <span
+                        class="text-xs">▶</span></button>
+            </div>
         </div>
     </div>
-
-    <div class="flex items-end justify-between mt-auto px-8 pb-4 text-white text-[10px]">
-        <div class="leading-tight">
-            <span class="font-bold">Fase 3 – Missão:</span><br>
-            Chegue até a casa dela pelo caminho central e converse com a sua namorada ❤️
-        </div>
-        <div class="flex gap-4">
-            <button id="pauseBtn" class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Pause <span class="text-xs">II</span></button>
-            <button id="playBtn" class="btn-red px-6 py-1 rounded-full font-bold uppercase flex items-center gap-2">Play <span class="text-xs">▶</span></button>
-        </div>
-    </div>
-</div>
 
     <script>
         // ══════════════════════════════════════════════
@@ -519,46 +537,64 @@
 
         const script = [
             {
-                speaker: "Ela 🐻‍❤️",
-                text: "...? Você está aqui de verdade?! Achei que você estava longe... como você chegou até aqui?",
+                speaker: "Lua 🌙",
+                text: "",
                 options: [
-                    "Vim de ônibus, pode acreditar? Peguei o 314!",
-                    "Vim porque precisava te ver. Simples assim.",
-                    "*sorri e abre a mochila mostrando o lírio do vale*",
+                    "Oi, minha lua... Eu sei que a gente não se vê há um tempo, mas eu queria vim te ver. Senti saudades.",
+                    "Oi amor, como você tá? Trouxe algumas coisas para você... queria te surpreender.",
+                    "Oi meu bem, surpresa em me ver? Não poderia deixar de vir te ver nesse dia tão especial.",
                 ]
             },
             {
-                speaker: "Ela 🐻‍❤️",
-                text: "Você trouxe um lírio... e sorvete?! E isso — é uma raposa de pelúcia?! Você é idiota... mas do jeito mais fofo possível.",
+                speaker: "Lua 🌙",
+                text: "Você veio sem avisar... fiquei surpresa.",
                 options: [
-                    "Sabia que você ia gostar da raposa.",
-                    "Queria que cada coisa lembrasse algo de mim quando eu não estiver aqui.",
-                    "Fiz tudo isso por você. E faria de novo.",
+                    "Desculpa, minha lua... é que eu queria muito te ver e falar algo para você.",
+                    "Eu sei que devia ter avisado antes, mas queria te falar algo pessoalmente.",
+                    "Foi impulso meu, foi mal... mas eu senti sua falta e queria te dizer uma coisa.",
                 ]
             },
             {
-                speaker: "Ela 🐻‍❤️",
-                text: "Eu fico com saudade, sabe? Não é fácil. Às vezes eu fico aqui pensando se você também sente...",
+                speaker: "Lua 🌙",
+                text: "O que é isso?",
                 options: [
-                    "Sinto. Cada dia. Mas saudade prova que o que a gente tem é real.",
-                    "A distância dói, mas pensar em você faz tudo valer a pena.",
-                    "Você nunca precisa duvidar disso. Nunca.",
+                    "São algumas coisinhas que eu trouxe pra você. Lembrei de cada uma delas pensando em você.",
+                    "São presentes para você, queria te surpreender com coisas que você já me falou.",
+                    "Uma raposa de pelúcia, um sorvete e um lírio do vale... eu espero que goste.",
                 ]
             },
             {
-                speaker: "Ela 🐻‍❤️",
-                text: "Às vezes tenho medo que um dia você canse... que a distância seja grande demais. Tenho medo de te perder.",
+                speaker: "Lua 🌙",
+                text: "Você realmente lembrou de cada uma dessas coisas...",
                 options: [
-                    "Não vou mentir que é fácil. Mas desistir de você? Isso nunca.",
-                    "Esse medo eu entendo. Mas ele não vai acontecer.",
-                    "Você vale cada quilômetro, cada espera, cada saudade.",
+                    "Claro. Eu presto atenção em tudo que vem de você.",
+                    "É impossível não lembrar quando algo me faz pensar em você.",
+                    "Gosto de guardar essas pequenas coisas sobre você.",
                 ]
             },
             {
-                speaker: "Ela 🐻‍❤️",
-                text: "...Eu precisava ouvir isso. Mas quero ouvir de você mesmo — com suas palavras. O que você sente de verdade?",
+                speaker: "Lua 🌙",
+                text: "Eu amei tudo, obrigada! Mas... por que você fez essa viagem toda para me ver? Não foi fácil, né?",
                 options: [
-                    "Eu viajaria mil quilômetros se fosse para ver você bem. Eu te amo, e vou continuar te amando enquanto meu mundo tiver cor, afinal é você quem traz cor a ele.",
+                    "Não, mas cada passo valeu a pena para estar aqui com você hoje.",
+                    "Eu queria te ver, te abraçar, te dizer o quanto eu te amo pessoalmente. Não foi tão difícil assim.",
+                    "A distância é só um detalhe quando o que importa é que agora tenho o prazer de estar com você.",
+                ]
+            },
+            {
+                speaker: "Lua 🌙",
+                text: "Você faz umas coisas meio impulsivas às vezes... mas eu gosto quando cuida de mim assim.",
+                options: [
+                    "Então vou continuar cuidando de você desse jeito.",
+                    "Você merece cada gesto meu, minha lua.",
+                    "Ver você feliz já faz tudo valer a pena.",
+                ]
+            },
+            {
+                speaker: "Lua 🌙",
+                text: "E o que você quer tanto me dizer, ursinho?",
+                options: [
+                    "Que eu viajaria mil quilômetros se fosse para ver você bem. Eu te amo, e vou continuar te amando enquanto meu mundo tiver cor, afinal é você quem trouxe cor a esse mundo jogável e é você a razão pela qual tudo isso existe. Eu te amo, eu te amo mil milhões, Lua.",
                 ],
                 isFinal: true
             }
