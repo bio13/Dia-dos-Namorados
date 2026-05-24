@@ -515,6 +515,21 @@
             requestAnimationFrame(loop);
         }
         loop();
+
+        function checkOrientation() {
+        if (innerHeight > innerWidth) {
+            document.body.innerHTML = `
+            <div style="background:#3d2b2b;position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:sans-serif;padding:20px;text-align:center;">
+                <p style="font-size:20px;margin-bottom:15px;">Gire o celular para o modo Paisagem! 🔄</p>
+                <img src="https://jogo.4.inpevcampolimpo.org.br/links/media/artes-assets/portrait-warning.gif" style="max-width:80%; border: 4px solid #ff5e5e; border-radius:10px;">
+            </div>`;
+        }
+    }
+    
+    setTimeout(() => loop(), 100);
+    
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("load", checkOrientation);
     </script>
 </body>
 
