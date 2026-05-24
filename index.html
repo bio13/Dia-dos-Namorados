@@ -86,6 +86,17 @@
         const ctx = canvas.getContext("2d");
         const dialog = document.getElementById("dialog");
 
+        function checkOrientation() {
+            if (innerHeight > innerWidth) {
+                document.body.innerHTML = `
+          <div style="background:#343434;position:fixed;inset:0;display:flex;align-items:center;justify-content:center">
+            <img src="https://jogo.4.inpevcampolimpo.org.br/links/media/artes-assets/portrait-warning.gif" style="max-width:90%">
+          </div>`;
+            }
+        }
+        addEventListener("resize", checkOrientation);
+        addEventListener("load", checkOrientation);
+
         let isPaused = false;
         const player = { x: 150, y: 0, w: 40, h: 40, speed: 6, baseY: 0, climbY: 0, isClimbing: false, climbProgress: 0 };
         const map = { width: 4000, floorY: 0 };
