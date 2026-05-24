@@ -6,6 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Bears Love Story - Fase 1</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- SEO -->
+    <meta name="description"
+        content="Uma pequena história de amor em forma de jogo. Explore a escola, converse com os ursinhos e encontre sua lua.">
+    <meta name="author" content="Levi Vieira">
+    <meta name="theme-color" content="#ff5e5e">
+
+    <!-- Open Graph (WhatsApp, Facebook, Discord, etc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="My Little Love Story">
+    <meta property="og:description"
+        content="Chegue ao final do jogo, recolha itens, responda perguntas e descubra o destino dos ursinhos.">
+    <meta property="og:image" content="https://assets.epuzzle.info/puzzle/101/571/original.jpg">
+    <meta property="og:url" content="https://bio13.github.io/My-Little-Love-Story/">
+    <meta property="og:site_name" content="My Little Love Story">
+
+    <!-- WhatsApp -->
+    <meta property="og:locale" content="pt_BR">
+
     <style>
         body {
             font-family: "Comic Sans MS", system-ui, sans-serif;
@@ -14,10 +33,25 @@
             overflow: hidden;
             background-color: #1a1a1a;
         }
-        canvas { display: block; background: #ffffff; }
-        .console-body { background-color: #3d2b2b; }
-        .btn-red { background-color: #ff5e5e; border: 2px solid #ffffff; color: white; }
-        .btn-red:active { background-color: #e04a4a; }
+
+        canvas {
+            display: block;
+            background: #ffffff;
+        }
+
+        .console-body {
+            background-color: #3d2b2b;
+        }
+
+        .btn-red {
+            background-color: #ff5e5e;
+            border: 2px solid #ffffff;
+            color: white;
+        }
+
+        .btn-red:active {
+            background-color: #e04a4a;
+        }
 
         #transition-overlay {
             display: none;
@@ -31,9 +65,20 @@
             color: white;
             font-family: "Comic Sans MS", sans-serif;
         }
-        #transition-overlay.active { display: flex; }
-        #transition-overlay h2 { font-size: 2rem; margin-bottom: 1rem; }
-        #transition-overlay p { font-size: 1rem; opacity: 0.7; }
+
+        #transition-overlay.active {
+            display: flex;
+        }
+
+        #transition-overlay h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        #transition-overlay p {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
     </style>
 </head>
 
@@ -44,22 +89,28 @@
         <p>O ursinho saiu da escola!</p>
     </div>
 
-    <div class="console-body relative w-[95vw] h-[90vh] rounded-[3rem] shadow-2xl flex flex-col p-6 border-b-8 border-black/40">
+    <div
+        class="console-body relative w-[95vw] h-[90vh] rounded-[3rem] shadow-2xl flex flex-col p-6 border-b-8 border-black/40">
         <div class="absolute top-4 left-12 text-white/70 text-sm font-bold uppercase tracking-widest">
             My Little Love Story
         </div>
         <div class="flex flex-1 items-center justify-between gap-4 mt-4">
             <div class="relative w-32 h-32 flex items-center justify-center">
-                <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▲</button>
+                <button class="absolute top-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed"
+                    disabled>▲</button>
                 <button id="left" class="absolute left-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">◀</button>
                 <button id="right" class="absolute right-0 btn-red w-10 h-10 rounded-md shadow-md text-xl">▶</button>
-                <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed" disabled>▼</button>
+                <button class="absolute bottom-0 btn-red w-10 h-10 rounded-md opacity-30 cursor-not-allowed"
+                    disabled>▼</button>
                 <div class="w-8 h-8 bg-[#3d2b2b] rounded-full border border-white/20"></div>
             </div>
 
-            <div class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-sm overflow-hidden shadow-inner">
+            <div
+                class="relative flex-1 h-full bg-white border-[6px] border-[#ff5e5e] rounded-sm overflow-hidden shadow-inner">
                 <canvas id="game"></canvas>
-                <div id="dialog" class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] bg-black/80 text-white p-2 rounded text-xs z-20 text-center"></div>
+                <div id="dialog"
+                    class="hidden absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] bg-black/80 text-white p-2 rounded text-xs z-20 text-center">
+                </div>
             </div>
 
             <div class="w-32 flex justify-center">
@@ -75,8 +126,12 @@
                 • Vá à Coordenação (esquerda), pegue a escada e leve ao beco (extrema direita). Suba a escada para sair!
             </div>
             <div class="flex gap-4">
-                <button id="pauseBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Pause <span class="text-xs">II</span></button>
-                <button id="playBtn" class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Play <span class="text-xs">▶</span></button>
+                <button id="pauseBtn"
+                    class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Pause
+                    <span class="text-xs">II</span></button>
+                <button id="playBtn"
+                    class="btn-red px-6 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-2">Play
+                    <span class="text-xs">▶</span></button>
             </div>
         </div>
     </div>
@@ -85,17 +140,6 @@
         const canvas = document.getElementById("game");
         const ctx = canvas.getContext("2d");
         const dialog = document.getElementById("dialog");
-
-        function checkOrientation() {
-            if (innerHeight > innerWidth) {
-                document.body.innerHTML = `
-          <div style="background:#343434;position:fixed;inset:0;display:flex;align-items:center;justify-content:center">
-            <img src="https://jogo.4.inpevcampolimpo.org.br/links/media/artes-assets/portrait-warning.gif" style="max-width:90%">
-          </div>`;
-            }
-        }
-        addEventListener("resize", checkOrientation);
-        addEventListener("load", checkOrientation);
 
         let isPaused = false;
         const player = { x: 150, y: 0, w: 40, h: 40, speed: 6, baseY: 0, climbY: 0, isClimbing: false, climbProgress: 0 };
@@ -473,4 +517,5 @@
         loop();
     </script>
 </body>
+
 </html>
