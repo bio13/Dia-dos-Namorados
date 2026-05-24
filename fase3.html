@@ -29,10 +29,10 @@
 
         .console-body {
             background-color: #3d2b2b;
-            width: 93vw;
-            height: 86dvh;
+            width: 95vw;
+            height: 88dvh;
             /* Reduzido para caber no celular */
-            max-height: 90dvh;
+            max-height: 92dvh;
             border-radius: 2.5rem;
             box-shadow: 0 10px 40px rgba(0, 0, 0, .6);
             display: flex;
@@ -187,7 +187,7 @@
 
         @keyframes scrollUp {
             0% {
-                bottom: -130%;
+                bottom: -100%;
             }
 
             100% {
@@ -360,12 +360,8 @@
 
                 <!-- MENSAGEM FINAL -->
                 <div id="final-message" class="hidden absolute inset-0 bg-black flex items-center justify-center">
-                    <p>“Para tudo o que você quiser ou precisar, eu estarei aqui por ti.<br>
-                        Não importa a distância, o tempo ou as circunstâncias, pois o amor que tenho por ti vai além
-                        deste espaço.<br>
-                        Comigo, peço que seja sempre você mesma; quero ver-te exatamente como és. Quero ver tua luz, ó
-                        lua.”</p>
-                    <p>Isso te lembra algo? <a
+                    <p>“Para tudo o que você quiser ou precisar, eu estarei aqui por ti. Não importa a distância, o tempo ou as circunstâncias, pois o amor que tenho por ti vai além deste espaço. Comigo, peço que seja sempre você mesma; quero ver-te exatamente como és. Quero ver tua luz, ó lua.”</p>
+                    <p>Isso te lembra algo?<br> <a style="color: #fff; text-decoration: underline;"
                             href="https://www.youtube.com/watch?v=30fbS1x0i5M&list=RD30fbS1x0i5M&start_radio=1">Ouça a
                             música</a></p>
                 </div>
@@ -643,10 +639,10 @@
             const pc = document.getElementById("dialog-portrait");
             const pctx = pc.getContext("2d");
             pctx.clearRect(0, 0, 80, 80);
-            // Ursa namorada: cor vinho/rosa escuro
-            const color = "#c0392b";
+            // Ursa namorada: cor branca
+            const color = "#fff";
             // Fundo circular
-            pctx.fillStyle = "#fff0f3";
+            pctx.fillStyle = "#000";
             pctx.beginPath(); pctx.arc(40, 40, 38, 0, Math.PI * 2); pctx.fill();
             // Corpo
             pctx.fillStyle = color;
@@ -657,7 +653,7 @@
             pctx.arc(58, 28, 8, 0, Math.PI * 2);
             pctx.fill();
             // Focinho
-            pctx.fillStyle = "rgba(255,255,255,.8)";
+            pctx.fillStyle = "rgb(200,200,200)";
             pctx.beginPath(); pctx.ellipse(40, 54, 10, 7, 0, 0, Math.PI * 2); pctx.fill();
             // Nariz
             pctx.fillStyle = "#3d2b2b";
@@ -665,10 +661,10 @@
             // Olhos com coração
             pctx.fillStyle = "#3d2b2b";
             pctx.font = "10px serif"; pctx.textAlign = "center";
-            pctx.fillText("♡", 31, 45);
-            pctx.fillText("♡", 49, 45);
+            pctx.fillText("●", 31, 45);
+            pctx.fillText("●", 49, 45);
             // Laço de cabelo
-            pctx.fillStyle = "#ff5e5e";
+            pctx.fillStyle = "red";
             pctx.beginPath(); pctx.arc(58, 22, 5, 0, Math.PI * 2); pctx.fill();
             pctx.beginPath(); pctx.ellipse(58, 22, 8, 4, 0.5, 0, Math.PI * 2); pctx.fill();
         }
@@ -720,7 +716,7 @@
                 // Ursinho vermelho (jogador) - lado esquerdo, levemente inclinado para ela
                 drawHugBear(ectx, cx - 36, groundY - 82, "#ff5e5e", -0.12, t);
                 // Namorada - lado direito, levemente inclinada para ele
-                drawHugBear(ectx, cx + 10, groundY - 82, "#c0392b", 0.12, t, true);
+                drawHugBear(ectx, cx + 10, groundY - 82, "#fff", 0.12, t, true);
 
                 // Coração pulsante acima deles
                 heartPulse = 1 + Math.sin(t / 20) * 0.15;
@@ -763,19 +759,19 @@
                 }
 
                 // Focinho
-                c.fillStyle = "rgba(255,255,255,.8)";
+                c.fillStyle = "rgb(200,200,200)";
                 c.beginPath(); c.ellipse(20, 28, 10, 7, 0, 0, Math.PI * 2); c.fill();
-                c.fillStyle = "#3d2b2b";
+                c.fillStyle = "#000";
                 c.beginPath(); c.arc(20, 25, 3, 0, Math.PI * 2); c.fill();
 
                 // Olhos fechados com "~" (felizes)
-                c.strokeStyle = "#3d2b2b"; c.lineWidth = 2; c.lineCap = "round";
+                c.strokeStyle = "#000"; c.lineWidth = 2; c.lineCap = "round";
                 c.beginPath(); c.arc(12, 16, 4, Math.PI * 0.1, Math.PI * 0.9); c.stroke();
                 c.beginPath(); c.arc(28, 16, 4, Math.PI * 0.1, Math.PI * 0.9); c.stroke();
 
                 if (isGF) {
                     // Laço da namorada
-                    c.fillStyle = "#ff5e5e";
+                    c.fillStyle = "red";
                     c.beginPath(); c.arc(36, 0, 5, 0, Math.PI * 2); c.fill();
                     c.beginPath(); c.ellipse(36, 0, 9, 4, 0.5, 0, Math.PI * 2); c.fill();
                 }
@@ -873,15 +869,15 @@
         }
 
         function drawGFBear(x, y) {
-            // Namorada: ursa vinho/vermelho com laço
-            drawBear(x, y, "#c0392b", false, 1);
+            // Namorada: ursa branca
+            drawBear(x, y, "#ffffff", false, 1);
             // Laço por cima
-            ctx.fillStyle = "#ff5e5e";
+            ctx.fillStyle = "red";
             ctx.beginPath(); ctx.arc(x + 38, y + 2, 5, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.ellipse(x + 38, y + 2, 9, 4, 0.5, 0, Math.PI * 2); ctx.fill();
             // Corações nos olhos quando player perto
             if (!talkingGF) return;
-            ctx.fillStyle = "#3d2b2b";
+            ctx.fillStyle = "red";
             ctx.font = "9px serif"; ctx.textAlign = "center";
         }
 
@@ -1391,7 +1387,7 @@
             ctx.fillStyle = "rgba(0,0,0,.55)";
             ctx.beginPath(); ctx.roundRect(8, 72, 160, 26, 6); ctx.fill();
             ctx.fillStyle = "#ff5e5e"; ctx.font = "bold 10px Arial"; ctx.textAlign = "left";
-            ctx.fillText(inHouse ? "🏠 Dentro da casa" : "🌳 Rua - Av. Manoel Mavignier", 18, 88);
+            ctx.fillText(inHouse ? "🏠 Dentro da casa" : "Rua", 18, 88);
 
             if (isPaused) {
                 ctx.fillStyle = "rgba(0,0,0,.5)";
